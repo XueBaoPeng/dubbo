@@ -32,6 +32,7 @@ import java.util.stream.IntStream;
 /**
  * Code generator for Adaptive class
  */
+//创建适配器类，类似于dubbo动态生成的Transporter$Adpative这样的类
 public class AdaptiveClassCodeGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(AdaptiveClassCodeGenerator.class);
@@ -96,7 +97,7 @@ public class AdaptiveClassCodeGenerator {
         code.append(generatePackageInfo());
         code.append(generateImports());
         code.append(generateClassDeclaration());
-
+        //获得扩展接口的方法
         Method[] methods = type.getMethods();
         for (Method method : methods) {
             code.append(generateMethod(method));
