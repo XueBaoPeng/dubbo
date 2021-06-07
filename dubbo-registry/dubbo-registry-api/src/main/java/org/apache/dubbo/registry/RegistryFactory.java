@@ -25,6 +25,7 @@ import org.apache.dubbo.common.extension.SPI;
  *
  * @see org.apache.dubbo.registry.support.AbstractRegistryFactory
  */
+//这个接口是注册中心的工厂接口，用来返回注册中心的对象
 @SPI("dubbo")
 public interface RegistryFactory {
 

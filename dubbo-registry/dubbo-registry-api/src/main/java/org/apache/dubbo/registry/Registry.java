@@ -25,6 +25,7 @@ import org.apache.dubbo.common.URL;
  * @see org.apache.dubbo.registry.RegistryFactory#getRegistry(URL)
  * @see org.apache.dubbo.registry.support.AbstractRegistry
  */
+//注册中心接口，该接口很好理解，就是把节点以及注册中心服务的方法整合在了这个接口里面。
 public interface Registry extends Node, RegistryService {
     default void reExportRegister(URL url) {
         register(url);

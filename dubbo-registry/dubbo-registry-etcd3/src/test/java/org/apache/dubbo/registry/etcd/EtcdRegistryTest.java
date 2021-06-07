@@ -140,6 +140,7 @@ public class EtcdRegistryTest {
 
         final AtomicReference<URL> notifiedUrl = new AtomicReference<URL>();
         registry.subscribe(consumerUrl, new NotifyListener() {
+            @Override
             public void notify(List<URL> urls) {
                 notifiedUrl.set(urls.get(0));
             }
@@ -159,6 +160,7 @@ public class EtcdRegistryTest {
 
         final AtomicReference<URL> notifiedUrl = new AtomicReference<URL>();
         registry.subscribe(consumerUrl, new NotifyListener() {
+            @Override
             public void notify(List<URL> urls) {
                 notifiedUrl.set(urls.get(0));
                 notNotified.countDown();
@@ -183,6 +185,7 @@ public class EtcdRegistryTest {
         CountDownLatch notNotified = new CountDownLatch(3);
         ConcurrentHashMap<URL, Boolean> notifiedUrls = new ConcurrentHashMap<>();
         registry.subscribe(consumerUrl, new NotifyListener() {
+            @Override
             public void notify(List<URL> urls) {
                 if (urls != null && urls.size() > 0) {
                     if (!urls.get(0).getProtocol().equals("empty")) {
@@ -217,6 +220,7 @@ public class EtcdRegistryTest {
 
         final AtomicReference<URL> notifiedUrls = new AtomicReference<URL>();
         registry.subscribe(consumerUrl, new NotifyListener() {
+            @Override
             public void notify(List<URL> urls) {
                 notifiedUrls.set(urls.get(0));
                 notNotified.countDown();
@@ -245,6 +249,7 @@ public class EtcdRegistryTest {
         ConcurrentHashMap<URL, Boolean> notifiedUrls = new ConcurrentHashMap<>();
 
         registry.subscribe(subscribe, new NotifyListener() {
+            @Override
             public void notify(List<URL> urls) {
                 if (urls != null && urls.size() > 0) {
                     if (!urls.get(0).getProtocol().equals("empty")) {
@@ -280,6 +285,7 @@ public class EtcdRegistryTest {
         final AtomicReference<URL> notifiedUrl = new AtomicReference<URL>();
 
         NotifyListener listener = new NotifyListener() {
+            @Override
             public void notify(List<URL> urls) {
                 if (urls != null) {
                     for (Iterator<URL> iterator = urls.iterator(); iterator.hasNext(); ) {
