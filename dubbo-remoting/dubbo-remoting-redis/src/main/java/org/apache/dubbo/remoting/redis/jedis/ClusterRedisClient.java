@@ -67,8 +67,12 @@ public class ClusterRedisClient extends AbstractRedisClient implements RedisClie
     @Override
     public boolean isConnected() {
         Map<String, JedisPool> poolMap = jedisCluster.getClusterNodes();
+        // 遍历连接池集合
         for (JedisPool jedisPool : poolMap.values()) {
+            // 从连接池中获得jedis实例
             Jedis jedis = jedisPool.getResource();
+            // 判断是否有redis服务器被连接着
+            // 只要有一台连接，则算注册中心可用
             if (jedis.isConnected()) {
                 return true;
             }
