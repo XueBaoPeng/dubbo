@@ -25,7 +25,9 @@ import org.apache.dubbo.common.extension.SPI;
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Transport_Layer">Transport Layer</a>
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
- *
+ *该接口是一个可扩展的接口，并且默认实现NettyTransporter。
+ * 用了dubbo SPI扩展机制中的Adaptive注解，加载对应的bind方法，使用url携带的server或者transporter属性值，加载对应的connect方法，
+ * 使用url携带的client或者transporter属性值，不了解SPI扩展机制的可以查看
  * @see org.apache.dubbo.remoting.Transporters
  */
 @SPI("netty")
@@ -33,7 +35,7 @@ public interface Transporter {
 
     /**
      * Bind a server.
-     *
+       绑定一个服务器
      * @param url     server url
      * @param handler
      * @return server
@@ -45,7 +47,7 @@ public interface Transporter {
 
     /**
      * Connect to a server.
-     *
+     * 连接一个服务器，即创建一个客户端
      * @param url     server url
      * @param handler
      * @return client

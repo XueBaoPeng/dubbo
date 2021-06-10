@@ -24,11 +24,19 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerDispatcher;
 
 /**
  * Transporter facade. (API, Static, ThreadSafe)
+ *
+ 该类用到了设计模式的外观模式，通过该类的包装，我们就不会看到内部具体的实现细节，这样降低了程序的复杂度，也提高了程序的可维护性。
+ 比如这个类，包装了调用各种实现Transporter接口的方法，通过getTransporter来获得Transporter的实现对象，具体实现哪个实现类，
+ 取决于url中携带的配置信息，如果url中没有相应的配置，则默认选择@SPI中的默认值netty。
+ bind和connect方法分别有两个重载方法，其中的操作只是把把字符串的url转化为URL对象。
+ 静态代码块中检测了一下jar包是否有重复。
+
  */
 public class Transporters {
 
     static {
         // check duplicate jar package
+        // 检查重复的 jar 包
         Version.checkDuplicate(Transporters.class);
         Version.checkDuplicate(RemotingException.class);
     }
@@ -48,11 +56,14 @@ public class Transporters {
             throw new IllegalArgumentException("handlers == null");
         }
         ChannelHandler handler;
+        // 创建handler
         if (handlers.length == 1) {
             handler = handlers[0];
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
+        // 调用Transporter的实现类对象的bind方法。
+        // 例如实现NettyTransporter，则调用NettyTransporter的connect，并且返回相应的server
         return getTransporter().bind(url, handler);
     }
 
@@ -72,6 +83,8 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
+        // 调用Transporter的实现类对象的connect方法。
+        // 例如实现NettyTransporter，则调用NettyTransporter的connect，并且返回相应的client
         return getTransporter().connect(url, handler);
     }
 

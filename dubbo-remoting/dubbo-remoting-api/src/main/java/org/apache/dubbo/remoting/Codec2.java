@@ -22,17 +22,25 @@ import org.apache.dubbo.remoting.buffer.ChannelBuffer;
 
 import java.io.IOException;
 
+/**
+ *
+ Codec2是一个可扩展的接口，因为有@SPI注解。
+ 用到了Adaptive机制，首先去url中寻找key为codec的value，来加载url携带的配置中指定的codec的实现。
+ 该接口中有个枚举类型DecodeResult，因为解码过程中，需要解决 TCP 拆包、粘包的场景，所以增加了这两种解码结果，关于TCP 拆包、粘包的场景我就不多解释，不懂得朋友可以google一下。
+
+ */
 @SPI
 public interface Codec2 {
-
+    //编码
     @Adaptive({Constants.CODEC_KEY})
     void encode(Channel channel, ChannelBuffer buffer, Object message) throws IOException;
-
+    //解码
     @Adaptive({Constants.CODEC_KEY})
     Object decode(Channel channel, ChannelBuffer buffer) throws IOException;
 
 
     enum DecodeResult {
+        // 需要更多输入和忽略一些输入
         NEED_MORE_INPUT, SKIP_SOME_INPUT
     }
 

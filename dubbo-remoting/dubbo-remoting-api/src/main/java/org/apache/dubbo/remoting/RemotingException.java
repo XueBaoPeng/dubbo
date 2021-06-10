@@ -21,6 +21,10 @@ import java.net.InetSocketAddress;
 /**
  * RemotingException. (API, Prototype, ThreadSafe)
  *
+ RemotingException继承了Exception类，是远程通信的基础异常。
+ ExecutionException继承了RemotingException类，ExecutionException是远程通信的执行异常。
+ TimeoutException继承了RemotingException类，TimeoutException是超时异常。
+
  * @export
  * @see org.apache.dubbo.remoting.exchange.support.DefaultFuture#get()
  * @see org.apache.dubbo.remoting.Channel#send(Object, boolean)
