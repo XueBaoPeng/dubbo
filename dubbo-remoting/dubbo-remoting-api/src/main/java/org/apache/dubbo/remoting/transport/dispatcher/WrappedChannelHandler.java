@@ -31,6 +31,11 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerDelegate;
 
 import java.util.concurrent.ExecutorService;
 
+/**
+ * 该类跟AbstractChannelHandlerDelegate的作用类似，都是装饰模式中的装饰角色，
+ * 其中的所有实现方法都直接调用被装饰的handler属性的方法，该类是为了添加线程池的功能，
+ * 它的子类都是去关心哪些消息是需要分发到线程池的，哪些消息直接由I / O线程执行，现在版本有四种场景，也就是它的四个子类
+ */
 public class WrappedChannelHandler implements ChannelHandlerDelegate {
 
     protected static final Logger logger = LoggerFactory.getLogger(WrappedChannelHandler.class);

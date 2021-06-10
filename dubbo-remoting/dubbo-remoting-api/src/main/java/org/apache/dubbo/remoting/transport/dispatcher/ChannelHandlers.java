@@ -23,6 +23,8 @@ import org.apache.dubbo.remoting.Dispatcher;
 import org.apache.dubbo.remoting.exchange.support.header.HeartbeatHandler;
 import org.apache.dubbo.remoting.transport.MultiMessageHandler;
 
+//该类是通道处理器工厂，会对传入的handler进行一次包装，无论是Client还是Server都会做这样的处理，
+// 也就是做了一些功能上的增强，就像上述我说到的装饰模式中的那些功能
 public class ChannelHandlers {
 
     private static ChannelHandlers INSTANCE = new ChannelHandlers();
@@ -43,6 +45,7 @@ public class ChannelHandlers {
     }
 
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
+        // 调用了多消息处理器，对心跳消息进行了功能加强
         return new MultiMessageHandler(new HeartbeatHandler(ExtensionLoader.getExtensionLoader(Dispatcher.class)
                 .getAdaptiveExtension().dispatch(handler, url)));
     }

@@ -28,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * ChannelListenerDispatcher
+ * 该类是通道处理器调度器，其中缓存了所有通道处理器，有一个通道处理器集合。并且每个操作都会去遍历该集合，执行相应的操作，例如：
  */
 public class ChannelHandlerDispatcher implements ChannelHandler {
 

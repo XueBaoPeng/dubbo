@@ -29,6 +29,7 @@ public class MessageOnlyDispatcher implements Dispatcher {
 
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
+        // 只要是接收到的消息，都分发到线程池
         return new MessageOnlyChannelHandler(handler, url);
     }
 

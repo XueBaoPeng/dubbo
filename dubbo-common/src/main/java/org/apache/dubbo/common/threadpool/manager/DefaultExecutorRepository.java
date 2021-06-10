@@ -115,20 +115,29 @@ public class DefaultExecutorRepository implements ExecutorRepository {
     @Override
     public void updateThreadpool(URL url, ExecutorService executor) {
         try {
+            // 重置线程数配置
             if (url.hasParameter(THREADS_KEY)
                     && executor instanceof ThreadPoolExecutor && !executor.isShutdown()) {
                 ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
+                // 获得url配置中的线程数
                 int threads = url.getParameter(THREADS_KEY, 0);
+                // 获得线程池允许的最大线程数
                 int max = threadPoolExecutor.getMaximumPoolSize();
+                // 返回核心线程数
                 int core = threadPoolExecutor.getCorePoolSize();
+                // 设置最大线程数和核心线程数
                 if (threads > 0 && (threads != max || threads != core)) {
                     if (threads < core) {
+                        // 如果设置的线程数比核心线程数少，则直接设置核心线程数
                         threadPoolExecutor.setCorePoolSize(threads);
                         if (core == max) {
+                            // 当核心线程数和最大线程数相等的时候，把最大线程数也重置
                             threadPoolExecutor.setMaximumPoolSize(threads);
                         }
                     } else {
+                        // 当大于核心线程数时，直接设置最大线程数
                         threadPoolExecutor.setMaximumPoolSize(threads);
+                        // 只有当核心线程数和最大线程数相等的时候才设置核心线程数
                         if (core == max) {
                             threadPoolExecutor.setCorePoolSize(threads);
                         }

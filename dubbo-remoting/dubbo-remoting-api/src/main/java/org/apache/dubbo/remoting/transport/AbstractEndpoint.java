@@ -35,18 +35,29 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractEndpoint.class);
 
+    //编解码器
     private Codec2 codec;
-
+    /**
+     * 超时时间
+     */
     private int connectTimeout;
 
     public AbstractEndpoint(URL url, ChannelHandler handler) {
         super(url, handler);
+        // 优先从url配置中取，如果没有，默认为1s
         this.codec = getChannelCodec(url);
+        // 优先从url配置中取，如果没有，默认为3s
         this.connectTimeout = url.getPositiveParameter(Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
     }
 
+    /**
+     *从url中获得编解码器的配置，并且返回该实例
+     * @param url
+     * @return
+     */
     protected static Codec2 getChannelCodec(URL url) {
         String codecName = url.getProtocol(); // codec extension name must stay the same with protocol name
+        // 优先从Codec2的扩展类中找
         if (ExtensionLoader.getExtensionLoader(Codec2.class).hasExtension(codecName)) {
             return ExtensionLoader.getExtensionLoader(Codec2.class).getExtension(codecName);
         } else {
@@ -63,6 +74,7 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
         }
 
         try {
+            // 判断重置的url中有没有携带timeout，有的话重置
             if (url.hasParameter(Constants.CONNECT_TIMEOUT_KEY)) {
                 int t = url.getParameter(Constants.CONNECT_TIMEOUT_KEY, 0);
                 if (t > 0) {
@@ -74,6 +86,7 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
         }
 
         try {
+            // 判断重置的url中有没有携带codec，有的话重置
             if (url.hasParameter(Constants.CODEC_KEY)) {
                 this.codec = getChannelCodec(url);
             }
@@ -82,6 +95,13 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
         }
     }
 
+    /**
+     * 这个方法是Resetable接口中的方法，可以看到以前的reset实现方法都加上了@Deprecated注解，不推荐使用了，
+     * 因为这种实现方式重置太复杂，需要把所有参数都设置一遍，比如我只想重置一个超时时间，但是其他值不变，
+     * 如果用以前的reset，我需要在url中把所有值都带上，就会很多余。现在用新的reset，每次只关心我需要重置的值，只更改为需要重置的值
+     * 。比如上面的代码所示，只想修改超时时间，那我就只在url中携带超时时间的参数
+     * @param parameters
+     */
     @Deprecated
     public void reset(Parameters parameters) {
         reset(getUrl().addParameters(parameters.getParameters()));

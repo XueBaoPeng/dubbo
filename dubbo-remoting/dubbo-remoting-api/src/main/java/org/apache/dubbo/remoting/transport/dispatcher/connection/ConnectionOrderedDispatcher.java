@@ -29,6 +29,7 @@ public class ConnectionOrderedDispatcher implements Dispatcher {
 
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
+        // 线程池调度方法：连接、断开连接分发到到线程池和其他消息分发到线程池不是同一个
         return new ConnectionOrderedChannelHandler(handler, url);
     }
 

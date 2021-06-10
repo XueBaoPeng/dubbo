@@ -44,9 +44,12 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
  */
 public abstract class AbstractClient extends AbstractEndpoint implements Client {
 
+    // 客户端线程名称
     protected static final String CLIENT_THREAD_POOL_NAME = "DubboClientHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractClient.class);
+    // 连接锁
     private final Lock connectLock = new ReentrantLock();
+
     private final boolean needReconnect;
     //issue-7054:Consumer's executor is sharing globally.
     protected volatile ExecutorService executor;
@@ -60,6 +63,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         initExecutor(url);
 
         try {
+            // 打开客户端
             doOpen();
         } catch (Throwable t) {
             close();
@@ -70,6 +74,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
         try {
             // connect.
+            // 连接服务器
             connect();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress() + " connect to the server " + getRemoteAddress());

@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
 
 /**
  * ChannelDelegate
+ * ChannelHandler的代表，它就是作为装饰模式中的Component角色，后面讲到的AbstractChannelHandlerDelegate作为装饰模式中的Decorator角色。
  */
 public class ChannelDelegate implements Channel {
 
@@ -36,7 +37,7 @@ public class ChannelDelegate implements Channel {
     public ChannelDelegate(Channel channel) {
         setChannel(channel);
     }
-
+    //获得通道
     public Channel getChannel() {
         return channel;
     }

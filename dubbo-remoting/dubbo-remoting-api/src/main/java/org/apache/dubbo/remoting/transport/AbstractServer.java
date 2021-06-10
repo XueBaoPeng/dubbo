@@ -43,27 +43,39 @@ import static org.apache.dubbo.remoting.Constants.DEFAULT_ACCEPTS;
  */
 public abstract class AbstractServer extends AbstractEndpoint implements RemotingServer {
 
+    //服务器线程名称
     protected static final String SERVER_THREAD_POOL_NAME = "DubboServerHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractServer.class);
+    /**
+      线程池
+     */
     ExecutorService executor;
+    //服务地址，也就是本地地址
     private InetSocketAddress localAddress;
+    // 绑定地址
     private InetSocketAddress bindAddress;
+    // 最大可接受的连接数
     private int accepts;
 
     private ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
 
     public AbstractServer(URL url, ChannelHandler handler) throws RemotingException {
         super(url, handler);
+        // 从url中获得本地地址
         localAddress = getUrl().toInetSocketAddress();
-
+        // 从url配置中获得绑定的ip
         String bindIp = getUrl().getParameter(Constants.BIND_IP_KEY, getUrl().getHost());
+        // 从url配置中获得绑定的端口号
         int bindPort = getUrl().getParameter(Constants.BIND_PORT_KEY, getUrl().getPort());
+        // 判断url中配置anyhost是否为true或者判断host是否为不可用的本地Host
         if (url.getParameter(ANYHOST_KEY, false) || NetUtils.isInvalidLocalHost(bindIp)) {
             bindIp = ANYHOST_VALUE;
         }
         bindAddress = new InetSocketAddress(bindIp, bindPort);
+        // 从url中获取配置，默认值为0
         this.accepts = url.getParameter(ACCEPTS_KEY, DEFAULT_ACCEPTS);
         try {
+            // 开启服务器
             doOpen();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " bind " + getBindAddress() + ", export " + getLocalAddress());
@@ -72,6 +84,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
             throw new RemotingException(url.toInetSocketAddress(), null, "Failed to bind " + getClass().getSimpleName()
                     + " on " + getLocalAddress() + ", cause: " + t.getMessage(), t);
         }
+        // 获得线程池
         executor = executorRepository.createExecutorIfAbsent(url);
     }
 
@@ -86,6 +99,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         }
 
         try {
+            // 重置accepts的值
             if (url.hasParameter(ACCEPTS_KEY)) {
                 int a = url.getParameter(ACCEPTS_KEY, 0);
                 if (a > 0) {
@@ -97,12 +111,15 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         }
 
         executorRepository.updateThreadpool(url, executor);
+        // 重置url
         super.setUrl(getUrl().addParameters(url.getParameters()));
     }
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        // 获得所有客户端对应的通道
         Collection<Channel> channels = getChannels();
+        // 群发消息
         for (Channel channel : channels) {
             if (channel.isConnected()) {
                 channel.send(message, sent);
@@ -115,7 +132,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         if (logger.isInfoEnabled()) {
             logger.info("Close " + getClass().getSimpleName() + " bind " + getBindAddress() + ", export " + getLocalAddress());
         }
-
+        // 立刻关闭线程池
         ExecutorUtil.shutdownNow(executor, 100);
 
         try {
@@ -133,6 +150,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
 
     @Override
     public void close(int timeout) {
+        // 优雅关闭线程池
         ExecutorUtil.gracefulShutdown(executor, timeout);
         close();
     }
@@ -158,7 +176,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
             ch.close();
             return;
         }
-
+        // 如果客户端连接数大于最大可接受连接数，则报错，并且关闭
         if (accepts > 0 && getChannels().size() > accepts) {
             logger.error("Close channel " + ch + ", cause: The server " + ch.getLocalAddress() + " connections greater than max config " + accepts);
             ch.close();

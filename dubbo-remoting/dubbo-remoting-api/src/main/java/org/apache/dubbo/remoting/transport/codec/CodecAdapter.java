@@ -27,6 +27,8 @@ import org.apache.dubbo.remoting.buffer.ChannelBuffer;
 
 import java.io.IOException;
 
+//该类是Codec 的适配器，用到了适配器模式，把Codec适配成Codec2。将Codec的编码和解码方法都适配成Codec2。
+// 比如很多时候都只能用Codec2的编解码器，但是有的时候需要用Codec，但是不能满足导致只能加入适配器来完成使用。
 public class CodecAdapter implements Codec2 {
 
     private Codec codec;
@@ -40,6 +42,7 @@ public class CodecAdapter implements Codec2 {
     public void encode(Channel channel, ChannelBuffer buffer, Object message)
             throws IOException {
         UnsafeByteArrayOutputStream os = new UnsafeByteArrayOutputStream(1024);
+        // 调用旧的编解码器的编码
         codec.encode(channel, os, message);
         buffer.writeBytes(os.toByteArray());
     }
@@ -50,6 +53,7 @@ public class CodecAdapter implements Codec2 {
         int savedReaderIndex = buffer.readerIndex();
         buffer.readBytes(bytes);
         UnsafeByteArrayInputStream is = new UnsafeByteArrayInputStream(bytes);
+        // 调用旧的编解码器的解码
         Object result = codec.decode(channel, is);
         buffer.readerIndex(savedReaderIndex + is.position());
         return result == Codec.NEED_MORE_INPUT ? DecodeResult.NEED_MORE_INPUT : result;
