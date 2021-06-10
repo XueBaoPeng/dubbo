@@ -25,6 +25,7 @@ import org.apache.dubbo.remoting.zookeeper.ZookeeperTransporter;
  * ZookeeperRegistryFactory.
  *
  */
+//该类继承了AbstractRegistryFactory类，实现了AbstractRegistryFactory抽象出来的createRegistry方法
 public class ZookeeperRegistryFactory extends AbstractRegistryFactory {
 
     private ZookeeperTransporter zookeeperTransporter;
