@@ -19,8 +19,10 @@ package org.apache.dubbo.remoting.buffer;
 
 import java.nio.ByteBuffer;
 
+//该类实现了ChannelBufferFactory，该类就是基于字节数组来创建缓冲区的工厂。
 public class HeapChannelBufferFactory implements ChannelBufferFactory {
 
+    //单例
     private static final HeapChannelBufferFactory INSTANCE = new HeapChannelBufferFactory();
 
     public HeapChannelBufferFactory() {
@@ -33,6 +35,7 @@ public class HeapChannelBufferFactory implements ChannelBufferFactory {
 
     @Override
     public ChannelBuffer getBuffer(int capacity) {
+        // 创建一个capacity容量的缓冲区
         return ChannelBuffers.buffer(capacity);
     }
 
@@ -43,13 +46,18 @@ public class HeapChannelBufferFactory implements ChannelBufferFactory {
 
     @Override
     public ChannelBuffer getBuffer(ByteBuffer nioBuffer) {
+        // 判断该缓冲区是否有字节数组支持
         if (nioBuffer.hasArray()) {
+            // 使用
             return ChannelBuffers.wrappedBuffer(nioBuffer);
         }
-
+        // 创建一个nioBuffer剩余容量的缓冲区
         ChannelBuffer buf = getBuffer(nioBuffer.remaining());
+        // 记录下nioBuffer的位置
         int pos = nioBuffer.position();
+        // 写入数据到buf
         buf.writeBytes(nioBuffer);
+        // 把nioBuffer的位置重置到pos
         nioBuffer.position(pos);
         return buf;
     }

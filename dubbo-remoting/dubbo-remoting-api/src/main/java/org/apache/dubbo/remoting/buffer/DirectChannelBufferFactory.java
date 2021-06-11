@@ -18,9 +18,10 @@
 package org.apache.dubbo.remoting.buffer;
 
 import java.nio.ByteBuffer;
-
+//该类实现了ChannelBufferFactory接口，是直接缓冲区工厂，用来创建直接缓冲区。
 public class DirectChannelBufferFactory implements ChannelBufferFactory {
 
+    //单例
     private static final DirectChannelBufferFactory INSTANCE = new DirectChannelBufferFactory();
 
     public DirectChannelBufferFactory() {
@@ -39,6 +40,7 @@ public class DirectChannelBufferFactory implements ChannelBufferFactory {
         if (capacity == 0) {
             return ChannelBuffers.EMPTY_BUFFER;
         }
+        // 生成直接缓冲区
         return ChannelBuffers.directBuffer(capacity);
     }
 
@@ -64,13 +66,18 @@ public class DirectChannelBufferFactory implements ChannelBufferFactory {
 
     @Override
     public ChannelBuffer getBuffer(ByteBuffer nioBuffer) {
+        // 如果nioBuffer不是只读，并且它是直接缓冲区
         if (!nioBuffer.isReadOnly() && nioBuffer.isDirect()) {
+            // 创建一个缓冲区
             return ChannelBuffers.wrappedBuffer(nioBuffer);
         }
-
+        // 创建一个nioBuffer剩余容量的缓冲区
         ChannelBuffer buf = getBuffer(nioBuffer.remaining());
+        // 记录下nioBuffer的位置
         int pos = nioBuffer.position();
+        // 写入数据到buf
         buf.writeBytes(nioBuffer);
+        // 把nioBuffer的位置重置到pos
         nioBuffer.position(pos);
         return buf;
     }

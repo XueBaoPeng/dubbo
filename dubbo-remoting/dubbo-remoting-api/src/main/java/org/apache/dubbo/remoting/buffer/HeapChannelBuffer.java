@@ -24,17 +24,18 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
-
+//该方法继承了AbstractChannelBuffer，该类中buffer是基于字节数组实现
 public class HeapChannelBuffer extends AbstractChannelBuffer {
 
     /**
      * The underlying heap byte array that this buffer is wrapping.
+     * 此缓冲区包装的基础堆字节数组。
      */
     protected final byte[] array;
 
     /**
      * Creates a new heap buffer with a newly allocated byte array.
-     *
+     * 使用新分配的字节数组创建新的堆缓冲区。
      * @param length the length of the new byte array
      */
     public HeapChannelBuffer(int length) {
@@ -43,7 +44,7 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
 
     /**
      * Creates a new heap buffer with an existing byte array.
-     *
+     * 使用现有字节数组创建新的堆缓冲区。
      * @param array the byte array to wrap
      */
     public HeapChannelBuffer(byte[] array) {
@@ -52,7 +53,7 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
 
     /**
      * Creates a new heap buffer with an existing byte array.
-     *
+     * 使用现有字节数组创建新的堆缓冲区。
      * @param array       the byte array to wrap
      * @param readerIndex the initial reader index of this buffer
      * @param writerIndex the initial writer index of this buffer

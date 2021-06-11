@@ -201,6 +201,8 @@ import java.nio.ByteBuffer;
  *
  *
  */
+//该接口继承了Comparable接口，该接口是通道缓存接口，是字节容器，在netty中也有通道缓存的设计，
+// 也就是io.netty.buffer.ByteBuf，该接口的方法定义和设计跟ByteBuf几乎一样，连注释都一样，
 public interface ChannelBuffer extends Comparable<ChannelBuffer> {
 
     /**

@@ -18,8 +18,10 @@ package org.apache.dubbo.remoting.buffer;
 
 import java.nio.ByteBuffer;
 
+//是通道缓冲区工厂，其中就只定义了获得通道缓冲区的方法，比较好理解，它有两个实现类，我后续会讲到。
 public interface ChannelBufferFactory {
 
+    //获得缓冲区实例
     ChannelBuffer getBuffer(int capacity);
 
     ChannelBuffer getBuffer(byte[] array, int offset, int length);

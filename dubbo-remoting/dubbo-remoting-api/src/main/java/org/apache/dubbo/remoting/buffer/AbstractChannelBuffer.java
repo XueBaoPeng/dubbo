@@ -22,14 +22,26 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+//该类实现了ChannelBuffer接口，是通道缓存的抽象类，它实现了ChannelBuffer所有方法，但是它实现的方法都是需要被重写的方法
+// ，具体的实现都是需要子类来实现。现在我们来恶补一下这个通道缓存的原理，当然这个原理跟netty的ByteBuf原理是分不开的。
+// AbstractChannelBuffer维护了两个索引，一个用于读取，另一个用于写入当你从通道缓存中读取时，readerIndex将会被递增已经被读取的字节数，
+// 同样的当你写入的时候writerIndex也会被递增
 public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
+    /**
+     * 读索引和写索引的起始位置都为索引位置0。而标记读索引和标记写索引是为了做备份回滚，当对缓冲区进行读写操作时
+     * ，可能需要对之前的操作进行回滚，我们就需要将当前的读写索引备份到相应的标记索引中
+     */
+    //读索引
     private int readerIndex;
 
+    //写索引
     private int writerIndex;
 
+    //标记读索引
     private int markedReaderIndex;
 
+    //标记写索引
     private int markedWriterIndex;
 
     @Override

@@ -19,6 +19,7 @@ package org.apache.dubbo.remoting.buffer;
 
 import java.nio.ByteBuffer;
 
+//该类是缓冲区的工具类，提供创建、比较 ChannelBuffer 等公用方法。我在这里举两个方法来讲：
 public final class ChannelBuffers {
 
     public static final ChannelBuffer EMPTY_BUFFER = new HeapChannelBuffer(0);
@@ -69,12 +70,16 @@ public final class ChannelBuffers {
     }
 
     public static ChannelBuffer wrappedBuffer(ByteBuffer buffer) {
+        // 如果缓冲区没有剩余容量
         if (!buffer.hasRemaining()) {
             return EMPTY_BUFFER;
         }
+        // 如果是字节数组生成的缓冲区
         if (buffer.hasArray()) {
+            // 使用buffer的字节数组生成一个新的缓冲区
             return wrappedBuffer(buffer.array(), buffer.arrayOffset() + buffer.position(), buffer.remaining());
         } else {
+            // 基于ByteBuffer创建一个缓冲区（利用buffer的剩余容量创建）
             return new ByteBufferBackedChannelBuffer(buffer);
         }
     }
@@ -91,17 +96,20 @@ public final class ChannelBuffers {
     }
 
     public static boolean equals(ChannelBuffer bufferA, ChannelBuffer bufferB) {
+        // 获得bufferA的可读数据
         final int aLen = bufferA.readableBytes();
+        // 如果两个缓冲区的可读数据大小不一样，则不是同一个
         if (aLen != bufferB.readableBytes()) {
             return false;
         }
 
         final int byteCount = aLen & 7;
-
+        // 获得两个比较的缓冲区的读索引
         int aIndex = bufferA.readerIndex();
         int bIndex = bufferB.readerIndex();
-
+        // 最多比较缓冲区中的7个数据
         for (int i = byteCount; i > 0; i--) {
+            // 一旦有一个数据不一样，则不是同一个
             if (bufferA.getByte(aIndex) != bufferB.getByte(bIndex)) {
                 return false;
             }
