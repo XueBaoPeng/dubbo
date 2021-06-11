@@ -27,8 +27,10 @@ import java.util.List;
 /**
  * @see org.apache.dubbo.remoting.transport.MultiMessageHandler
  */
+//该类实现了实现 Iterable 接口，是多消息的封装，我们直接看它的属性：
 public final class MultiMessage implements Iterable {
 
+    //消息集合
     private final List messages = new ArrayList();
 
     private MultiMessage() {

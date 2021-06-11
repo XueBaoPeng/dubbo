@@ -28,14 +28,14 @@ public interface ExchangeServer extends RemotingServer {
 
     /**
      * get channels.
-     *
+     *  获得通道集合
      * @return channels
      */
     Collection<ExchangeChannel> getExchangeChannels();
 
     /**
      * get channel.
-     *
+       根据远程地址获得对应的信息通道
      * @param remoteAddress
      * @return channel
      */

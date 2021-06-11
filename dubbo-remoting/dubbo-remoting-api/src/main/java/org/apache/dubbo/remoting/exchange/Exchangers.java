@@ -28,6 +28,8 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerAdapter;
 
 /**
  * Exchanger facade. (API, Static, ThreadSafe)
+ * 该类跟Transporters的设计意图是一样的，Transporters我在《dubbo源码解析（八）远程通信——开篇》的
+ * （十）Transporters已经讲到了。Exchangers也用到了外观模式。代码为就不贴了，可以对照着Transporters来看，很简单
  */
 public class Exchangers {
 

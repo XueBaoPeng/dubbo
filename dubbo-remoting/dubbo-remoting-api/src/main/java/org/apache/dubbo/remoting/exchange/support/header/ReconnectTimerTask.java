@@ -36,6 +36,10 @@ public class ReconnectTimerTask extends AbstractTimerTask {
         this.idleTimeout = idleTimeout;
     }
 
+    //如果需要心跳的通道本身如果关闭了，那么跳过，不添加心跳机制。
+    //无论是接收消息还是发送消息，只要超过了设置的心跳间隔，就发送心跳消息来测试是否断开
+    //如果最后一次接收到消息到到现在已经超过了心跳超时时间，那就认定对方的确断开，分两种情况来处理对方断开的情况。
+    // 分别是服务端断开，客户端重连以及客户端断开，服务端断开这个客户端的连接。，这里要好好品味一下谁是发送方，谁在等谁的响应，苦苦没有等到
     @Override
     protected void doTask(Channel channel) {
         try {

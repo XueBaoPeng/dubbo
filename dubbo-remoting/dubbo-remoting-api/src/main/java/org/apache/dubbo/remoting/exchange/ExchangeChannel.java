@@ -25,6 +25,8 @@ import java.util.concurrent.ExecutorService;
 /**
  * ExchangeChannel. (API/SPI, Prototype, ThreadSafe)
  */
+//该接口是信息交换通道接口，有四个方法，前两个是发送请求消息，区别就是第二个发送请求有超时的参数，
+// getExchangeHandler方法就是返回一个信息交换处理器，第四个是需要覆写父类的方法
 public interface ExchangeChannel extends Channel {
 
     /**

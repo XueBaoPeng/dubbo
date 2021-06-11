@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  * AbstractTimerTask
  */
 public abstract class AbstractTimerTask implements TimerTask {
-
+    //通道管理
     private final ChannelProvider channelProvider;
 
     private final Long tick;
@@ -44,10 +44,12 @@ public abstract class AbstractTimerTask implements TimerTask {
         this.channelProvider = channelProvider;
     }
 
+    // 最后一次接收到消息的时间戳
     static Long lastRead(Channel channel) {
         return (Long) channel.getAttribute(HeartbeatHandler.KEY_READ_TIMESTAMP);
     }
 
+    // 最后一次发送消息的时间戳
     static Long lastWrite(Channel channel) {
         return (Long) channel.getAttribute(HeartbeatHandler.KEY_WRITE_TIMESTAMP);
     }
@@ -79,11 +81,13 @@ public abstract class AbstractTimerTask implements TimerTask {
 
     @Override
     public void run(Timeout timeout) throws Exception {
+        // 获得所有的通道集合，需要心跳的通道数组
         Collection<Channel> c = channelProvider.getChannels();
         for (Channel channel : c) {
             if (channel.isClosed()) {
                 continue;
             }
+            //集合内的通道都做心跳检测
             doTask(channel);
         }
         reput(timeout, tick);

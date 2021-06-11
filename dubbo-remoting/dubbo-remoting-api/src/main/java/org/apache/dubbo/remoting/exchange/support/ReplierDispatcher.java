@@ -24,11 +24,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ReplierDispatcher
+ * 该类实现了Replier接口，是回复者调度器实现类。
  */
 public class ReplierDispatcher implements Replier<Object> {
 
+    //默认回复者
     private final Replier<?> defaultReplier;
 
+    //回复者集合
     private final Map<Class<?>, Replier<?>> repliers = new ConcurrentHashMap<Class<?>, Replier<?>>();
 
     public ReplierDispatcher() {
@@ -39,6 +42,7 @@ public class ReplierDispatcher implements Replier<Object> {
         this(defaultReplier, null);
     }
 
+    //从回复者集合中找到该类型的回复者，并且返回
     public ReplierDispatcher(Replier<?> defaultReplier, Map<Class<?>, Replier<?>> repliers) {
         this.defaultReplier = defaultReplier;
         if (repliers != null && repliers.size() > 0) {
@@ -68,6 +72,7 @@ public class ReplierDispatcher implements Replier<Object> {
         throw new IllegalStateException("Replier not found, Unsupported message object: " + type);
     }
 
+    // 回复请求
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object reply(ExchangeChannel channel, Object request) throws RemotingException {
