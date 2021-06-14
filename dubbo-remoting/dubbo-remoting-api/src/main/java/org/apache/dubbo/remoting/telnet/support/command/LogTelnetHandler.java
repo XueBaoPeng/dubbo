@@ -34,6 +34,7 @@ import java.util.Date;
 /**
  * LogTelnetHandler
  */
+///该类实现了TelnetHandler接口，封装了log命令的实现。
 @Activate
 @Help(parameter = "level", summary = "Change log level or show log ", detail = "Change log level or show log")
 public class LogTelnetHandler implements TelnetHandler {
@@ -50,8 +51,10 @@ public class LogTelnetHandler implements TelnetHandler {
         } else {
             String[] str = message.split(" ");
             if (!StringUtils.isInteger(str[0])) {
+                // 设置日志级别
                 LoggerFactory.setLevel(Level.valueOf(message.toUpperCase()));
             } else {
+                // 获得日志长度
                 int showLogLength = Integer.parseInt(str[0]);
 
                 if (file != null && file.exists()) {
@@ -60,12 +63,16 @@ public class LogTelnetHandler implements TelnetHandler {
                             try (FileChannel filechannel = fis.getChannel()) {
                                 size = filechannel.size();
                                 ByteBuffer bb;
+                                // 分配缓冲区
                                 if (size <= showLogLength) {
                                     bb = ByteBuffer.allocate((int) size);
+                                    // 读日志数据
                                     filechannel.read(bb, 0);
                                 } else {
+                                    // 分配缓冲区
                                     int pos = (int) (size - showLogLength);
                                     bb = ByteBuffer.allocate(showLogLength);
+                                    // 读取日志数据
                                     filechannel.read(bb, pos);
                                 }
                                 bb.flip();

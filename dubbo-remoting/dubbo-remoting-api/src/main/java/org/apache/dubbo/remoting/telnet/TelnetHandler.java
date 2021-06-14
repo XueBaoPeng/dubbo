@@ -28,9 +28,9 @@ public interface TelnetHandler {
 
     /**
      * telnet.
-     *
+     * 处理对应的telnet命令
      * @param channel
-     * @param message
+     * @param message telnet命令
      */
     String telnet(Channel channel, String message) throws RemotingException;
 

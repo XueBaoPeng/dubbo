@@ -25,6 +25,7 @@ import org.apache.dubbo.remoting.telnet.support.Help;
 /**
  * ClearTelnetHandler
  */
+//该类实现了TelnetHandler接口，封装了clear命令的实现。
 @Activate
 @Help(parameter = "[lines]", summary = "Clear screen.", detail = "Clear screen.")
 public class ClearTelnetHandler implements TelnetHandler {
@@ -34,13 +35,16 @@ public class ClearTelnetHandler implements TelnetHandler {
     @Override
     public String telnet(Channel channel, String message) {
         int lines = 100;
+        // 清除屏幕上的内容行数
         if (message.length() > 0) {
+            // 如果不是一个数字
             if (!StringUtils.isInteger(message)) {
                 return "Illegal lines " + message + ", must be integer.";
             }
             lines = Math.min(MAX_LINES,Integer.parseInt(message));
         }
         StringBuilder buf = new StringBuilder();
+        // 一行一行清除
         for (int i = 0; i < lines; i++) {
             buf.append("\r\n");
         }

@@ -38,23 +38,36 @@ import static org.apache.dubbo.remoting.Constants.DEFAULT_CHARSET;
 
 /**
  * TelnetCodec
+ * 该类继承了TransportCodec，是telnet的编解码类。
  */
 public class TelnetCodec extends TransportCodec {
 
     private static final Logger logger = LoggerFactory.getLogger(TelnetCodec.class);
-
+    /**
+     * 历史命令列表
+     */
     private static final String HISTORY_LIST_KEY = "telnet.history.list";
-
+    /**
+     * 历史命令位置，就是用上下键来找历史命令
+     */
     private static final String HISTORY_INDEX_KEY = "telnet.history.index";
-
+    /**
+     * 向上键
+     */
     private static final byte[] UP = new byte[]{27, 91, 65};
-
+    /**
+     * 向下键
+     */
     private static final byte[] DOWN = new byte[]{27, 91, 66};
-
+    /**
+     * 回车
+     */
     private static final List<?> ENTER = Arrays.asList(
             new byte[]{'\r', '\n'} /* Windows Enter */,
             new byte[]{'\n'} /* Linux Enter */);
-
+    /**
+     * 退出
+     */
     private static final List<?> EXIT = Arrays.asList(
             new byte[]{3} /* Windows Ctrl+C */,
             new byte[]{-1, -12, -1, -3, 6} /* Linux Ctrl+C */,
