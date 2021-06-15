@@ -29,7 +29,7 @@ public interface HttpBinder {
 
     /**
      * bind the server.
-     *
+     *     * 绑定到服务器
      * @param url server url.
      * @return server.
      */

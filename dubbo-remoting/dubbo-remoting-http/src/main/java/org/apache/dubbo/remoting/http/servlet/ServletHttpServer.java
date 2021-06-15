@@ -21,10 +21,12 @@ import org.apache.dubbo.remoting.Constants;
 import org.apache.dubbo.remoting.http.HttpHandler;
 import org.apache.dubbo.remoting.http.support.AbstractHttpServer;
 
+//该类继承了AbstractHttpServer，是基于 Servlet 的服务器实现类。
 public class ServletHttpServer extends AbstractHttpServer {
 
     public ServletHttpServer(URL url, HttpHandler handler) {
         super(url, handler);
+        // /把 HttpHandler 到 DispatcherServlet 中，默认端口为8080
         DispatcherServlet.addHttpHandler(url.getParameter(Constants.BIND_PORT_KEY, 8080), handler);
     }
 

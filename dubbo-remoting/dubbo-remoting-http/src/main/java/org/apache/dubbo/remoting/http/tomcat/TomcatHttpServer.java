@@ -35,45 +35,62 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_THREADS;
 import static org.apache.dubbo.common.constants.CommonConstants.THREADS_KEY;
 import static org.apache.dubbo.remoting.Constants.ACCEPTS_KEY;
 
+//该类是基于Tomcat来实现服务器的实现类，它继承了AbstractHttpServer。
 public class TomcatHttpServer extends AbstractHttpServer {
 
     private static final Logger logger = LoggerFactory.getLogger(TomcatHttpServer.class);
 
+    //内嵌的tomcat对象
     private final Tomcat tomcat;
 
+    //url对象
     private final URL url;
 
     public TomcatHttpServer(URL url, final HttpHandler handler) {
         super(url, handler);
 
         this.url = url;
+        // 添加处理器
         DispatcherServlet.addHttpHandler(url.getPort(), handler);
+        // 获得java.io.tmpdir的绝对路径目录
         String baseDir = new File(System.getProperty("java.io.tmpdir")).getAbsolutePath();
+        // 创建内嵌的tomcat对象
         tomcat = new Tomcat();
 
         Connector connector = tomcat.getConnector();
         connector.setPort(url.getPort());
+        // 给默认的http连接器。设置最大线程数
         connector.setProperty("maxThreads", String.valueOf(url.getParameter(THREADS_KEY, DEFAULT_THREADS)));
+        // 设置最大的连接数
         connector.setProperty("maxConnections", String.valueOf(url.getParameter(ACCEPTS_KEY, -1)));
+        // 设置URL编码格式
         connector.setProperty("URIEncoding", "UTF-8");
+        // 设置连接超时事件为60s
         connector.setProperty("connectionTimeout", "60000");
+        // 设置最大长连接个数为不限制个数
         connector.setProperty("maxKeepAliveRequests", "-1");
 
+        // 设置根目录
         tomcat.setBaseDir(baseDir);
+        // 设置端口号
         tomcat.setPort(url.getPort());
-
+        // 添加上下文
         Context context = tomcat.addContext("/", baseDir);
+        // 添加servlet，把servlet添加到context
         Tomcat.addServlet(context, "dispatcher", new DispatcherServlet());
         // Issue : https://github.com/apache/dubbo/issues/6418
         // addServletMapping method will be removed since Tomcat 9
         // context.addServletMapping("/*", "dispatcher");
+        // 添加servlet映射
         context.addServletMappingDecoded("/*", "dispatcher");
+        // 添加servlet上下文
         ServletManager.getInstance().addServletContext(url.getPort(), context.getServletContext());
 
         // tell tomcat to fail on startup failures.
         System.setProperty("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE", "true");
 
         try {
+            // 开启tomcat
             tomcat.start();
         } catch (LifecycleException e) {
             throw new IllegalStateException("Failed to start tomcat server at " + url.getAddress(), e);
@@ -84,9 +101,11 @@ public class TomcatHttpServer extends AbstractHttpServer {
     public void close() {
         super.close();
 
+        // 移除相关的servlet上下文
         ServletManager.getInstance().removeServletContext(url.getPort());
 
         try {
+            // 停止tomcat
             tomcat.stop();
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);

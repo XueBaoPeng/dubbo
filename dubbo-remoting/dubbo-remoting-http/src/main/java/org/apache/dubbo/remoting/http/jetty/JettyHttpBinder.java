@@ -28,6 +28,7 @@ public class JettyHttpBinder implements HttpBinder {
 
     @Override
     public HttpServer bind(URL url, HttpHandler handler) {
+        // 创建JettyHttpServer实例
         return new JettyHttpServer(url, handler);
     }
 

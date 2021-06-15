@@ -28,7 +28,7 @@ public interface HttpHandler {
 
     /**
      * invoke.
-     *
+     * HTTP请求处理
      * @param request  request.
      * @param response response.
      * @throws IOException
