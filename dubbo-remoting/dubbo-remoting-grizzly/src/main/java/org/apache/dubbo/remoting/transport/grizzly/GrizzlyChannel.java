@@ -37,17 +37,22 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * GrizzlyChannel
- *
+ * Grizzly NIO框架的设计初衷是帮助开发者更好地利用Java NIO API
  *
  */
 final class GrizzlyChannel extends AbstractChannel {
 
     private static final Logger logger = LoggerFactory.getLogger(GrizzlyChannel.class);
 
+    //通道key
     private static final String CHANNEL_KEY = GrizzlyChannel.class.getName() + ".CHANNEL";
 
+    //通道属性
+    //该类中的ATTRIBUTE和connection都是Grizzly涉及到的属性，ATTRIBUTE中封装了GrizzlyChannel的实例还有Connection实例。
+    // Grizzly把连接的一些连接的方法定义在了Connection接口中，包括获得远程地址、检测通道是否连接等方法
     private static final Attribute<GrizzlyChannel> ATTRIBUTE = Grizzly.DEFAULT_ATTRIBUTE_BUILDER.createAttribute(CHANNEL_KEY);
 
+    //Grizzly的连接实例
     private final Connection<?> connection;
 
     /**
@@ -105,9 +110,12 @@ final class GrizzlyChannel extends AbstractChannel {
 
         int timeout = 0;
         try {
+            // 发送消息，获得GrizzlyFuture实例
             GrizzlyFuture future = connection.write(message);
             if (sent) {
+                // 获得延迟多少时间获得响应
                 timeout = getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+                // 获得请求的值
                 future.get(timeout, TimeUnit.MILLISECONDS);
             }
         } catch (TimeoutException e) {

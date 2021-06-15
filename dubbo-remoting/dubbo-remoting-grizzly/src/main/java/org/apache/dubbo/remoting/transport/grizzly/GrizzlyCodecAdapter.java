@@ -39,17 +39,22 @@ import static org.apache.dubbo.remoting.Constants.MIN_BUFFER_SIZE;
 
 /**
  * GrizzlyCodecAdapter
+ * 该类是Grizzly编解码类，继承了BaseFilter。
  */
 public class GrizzlyCodecAdapter extends BaseFilter {
 
+    //编解码器
     private final Codec2 codec;
 
     private final URL url;
 
+    //通道处理器
     private final ChannelHandler handler;
 
+    //缓存大小
     private final int bufferSize;
 
+    //空缓存区
     private ChannelBuffer previousData = ChannelBuffers.EMPTY_BUFFER;
 
     public GrizzlyCodecAdapter(Codec2 codec, URL url, ChannelHandler handler) {
@@ -57,6 +62,7 @@ public class GrizzlyCodecAdapter extends BaseFilter {
         this.url = url;
         this.handler = handler;
         int b = url.getPositiveParameter(BUFFER_KEY, DEFAULT_BUFFER_SIZE);
+        // 如果缓存区大小在16k以内，则设置配置大小，如果不是，则设置8k的缓冲区大小
         this.bufferSize = b >= MIN_BUFFER_SIZE && b <= MAX_BUFFER_SIZE ? b : DEFAULT_BUFFER_SIZE;
     }
 
@@ -65,16 +71,21 @@ public class GrizzlyCodecAdapter extends BaseFilter {
         Connection<?> connection = context.getConnection();
         GrizzlyChannel channel = GrizzlyChannel.getOrAddChannel(connection, url, handler);
         try {
+            // 分配一个1024的动态缓冲区
             ChannelBuffer channelBuffer = ChannelBuffers.dynamicBuffer(1024); // Do not need to close
-
+            // 获得消息
             Object msg = context.getMessage();
+            // 编码
             codec.encode(channel, channelBuffer, msg);
-
+            // 检测是否连接
             GrizzlyChannel.removeChannelIfDisconnected(connection);
+            // 分配缓冲区
             Buffer buffer = connection.getTransport().getMemoryManager().allocate(channelBuffer.readableBytes());
+            // 把channelBuffer的数据写到buffer
             buffer.put(channelBuffer.toByteBuffer());
             buffer.flip();
             buffer.allowBufferDispose(true);
+            // 设置到上下文
             context.setMessage(buffer);
         } finally {
             GrizzlyChannel.removeChannelIfDisconnected(connection);
@@ -88,22 +99,30 @@ public class GrizzlyCodecAdapter extends BaseFilter {
         Connection<?> connection = context.getConnection();
         Channel channel = GrizzlyChannel.getOrAddChannel(connection, url, handler);
         try {
+            // 如果接收的是一个数据包
             if (message instanceof Buffer) { // receive a new packet
                 Buffer grizzlyBuffer = (Buffer) message; // buffer
 
                 ChannelBuffer frame;
-
+                // 如果缓冲区可读
                 if (previousData.readable()) {
+                    // 如果该缓冲区是动态的缓冲区
                     if (previousData instanceof DynamicChannelBuffer) {
+                        // 写入数据
                         previousData.writeBytes(grizzlyBuffer.toByteBuffer());
                         frame = previousData;
                     } else {
+                        // 获得需要的缓冲区大小
                         int size = previousData.readableBytes() + grizzlyBuffer.remaining();
+                        // 新建一个动态缓冲区
                         frame = ChannelBuffers.dynamicBuffer(size > bufferSize ? size : bufferSize);
+                        // 写入previousData中的数据
                         frame.writeBytes(previousData, previousData.readableBytes());
+                        // 写入grizzlyBuffer中的数据
                         frame.writeBytes(grizzlyBuffer.toByteBuffer());
                     }
                 } else {
+                    // 否则是基于Java NIO的ByteBuffer生成的缓冲区
                     frame = ChannelBuffers.wrappedBuffer(grizzlyBuffer.toByteBuffer());
                 }
 
@@ -113,22 +132,28 @@ public class GrizzlyCodecAdapter extends BaseFilter {
                 do {
                     savedReadIndex = frame.readerIndex();
                     try {
+                        // 解码
                         msg = codec.decode(channel, frame);
                     } catch (Exception e) {
                         previousData = ChannelBuffers.EMPTY_BUFFER;
                         throw new IOException(e.getMessage(), e);
                     }
+                    // 拆包
                     if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
                         frame.readerIndex(savedReadIndex);
+                        // 结束调用链
                         return context.getStopAction();
                     } else {
                         if (savedReadIndex == frame.readerIndex()) {
+                            // 没有可读内容
                             previousData = ChannelBuffers.EMPTY_BUFFER;
                             throw new IOException("Decode without read data.");
                         }
                         if (msg != null) {
+                            // 把解码后信息放入上下文
                             context.setMessage(msg);
                         }
+                        // 继续下面的调用链
                         return context.getInvokeAction();
                     }
                 } while (frame.readable());

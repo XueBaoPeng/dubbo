@@ -32,6 +32,7 @@ import java.io.IOException;
 
 /**
  * GrizzlyHandler
+ * 该类是Grizzly的通道处理器，它继承了BaseFilter。
  */
 public class GrizzlyHandler extends BaseFilter {
 
@@ -39,6 +40,7 @@ public class GrizzlyHandler extends BaseFilter {
 
     private final URL url;
 
+    //通道处理器
     private final ChannelHandler handler;
 
     public GrizzlyHandler(URL url, ChannelHandler handler) {
@@ -48,9 +50,12 @@ public class GrizzlyHandler extends BaseFilter {
 
     @Override
     public NextAction handleConnect(FilterChainContext ctx) throws IOException {
+        // 获得Connection连接实例
         Connection<?> connection = ctx.getConnection();
+        // 获得GrizzlyChannel通道
         GrizzlyChannel channel = GrizzlyChannel.getOrAddChannel(connection, url, handler);
         try {
+            // 连接
             handler.connected(channel);
         } catch (RemotingException e) {
             throw new IOException(StringUtils.toString(e));

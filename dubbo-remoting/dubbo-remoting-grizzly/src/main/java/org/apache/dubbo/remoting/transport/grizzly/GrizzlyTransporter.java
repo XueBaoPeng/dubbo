@@ -25,6 +25,7 @@ import org.apache.dubbo.remoting.Transporter;
 
 /**
  * GrizzlyTransporter
+ * 该类实现了Transporter接口，是基于Grizzly的传输层实现。
  */
 public class GrizzlyTransporter implements Transporter {
 
@@ -32,11 +33,13 @@ public class GrizzlyTransporter implements Transporter {
 
     @Override
     public RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException {
+        // 返回GrizzlyServer实例
         return new GrizzlyServer(url, handler);
     }
 
     @Override
     public Client connect(URL url, ChannelHandler handler) throws RemotingException {
+        // 返回GrizzlyClient实例
         return new GrizzlyClient(url, handler);
     }
 
