@@ -29,11 +29,13 @@ public class MinaTransporter implements Transporter {
 
     @Override
     public RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException {
+        // 创建MinaServer实例
         return new MinaServer(url, handler);
     }
 
     @Override
     public Client connect(URL url, ChannelHandler handler) throws RemotingException {
+        // 创建MinaClient实例
         return new MinaClient(url, handler);
     }
 
