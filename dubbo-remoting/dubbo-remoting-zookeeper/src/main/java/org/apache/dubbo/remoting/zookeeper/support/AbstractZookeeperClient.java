@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 
+//该类实现了ZookeeperClient接口，是客户端的抽象类，它实现了一些公共逻辑，把具体的doClose、createPersistent等方法抽象出来，留给子类来实现
 public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildListener> implements ZookeeperClient {
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractZookeeperClient.class);
@@ -40,13 +41,19 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
     protected int DEFAULT_SESSION_TIMEOUT_MS = 60 * 1000;
 
     private final URL url;
-
+    /**
+     * 状态监听器集合
+     */
     private final Set<StateListener> stateListeners = new CopyOnWriteArraySet<StateListener>();
-
+    /**
+     * 客户端监听器集合
+     */
     private final ConcurrentMap<String, ConcurrentMap<ChildListener, TargetChildListener>> childListeners = new ConcurrentHashMap<String, ConcurrentMap<ChildListener, TargetChildListener>>();
 
     private final ConcurrentMap<String, ConcurrentMap<DataListener, TargetDataListener>> listeners = new ConcurrentHashMap<String, ConcurrentMap<DataListener, TargetDataListener>>();
-
+    /**
+     * 是否关闭
+     */
     private volatile boolean closed = false;
 
     private final Set<String> persistentExistNodePath = new ConcurrentHashSet<>();
@@ -70,7 +77,9 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
 
     @Override
     public void create(String path, boolean ephemeral) {
+        // 如果不是临时节点
         if (!ephemeral) {
+            // 判断该客户端是否存在
             if (persistentExistNodePath.contains(path)) {
                 return;
             }
@@ -79,13 +88,18 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
                 return;
             }
         }
+        // 获得/的位置
         int i = path.lastIndexOf('/');
         if (i > 0) {
+            // 创建客户端
             create(path.substring(0, i), false);
         }
+        // 如果是临时节点
         if (ephemeral) {
+            // 创建临时节点
             createEphemeral(path);
         } else {
+            // 递归创建节点
             createPersistent(path);
             persistentExistNodePath.add(path);
         }
@@ -93,6 +107,7 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
 
     @Override
     public void addStateListener(StateListener listener) {
+        // 状态监听器加入集合
         stateListeners.add(listener);
     }
 
@@ -159,6 +174,7 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
         }
         closed = true;
         try {
+            // 关闭
             doClose();
         } catch (Throwable t) {
             logger.warn(t.getMessage(), t);
@@ -188,21 +204,44 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
         }
         return doGetContent(path);
     }
-
+    /**
+     * 关闭客户端
+     */
     protected abstract void doClose();
-
+    /**
+     * 递归创建节点
+     * @param path
+     */
     protected abstract void createPersistent(String path);
 
+    /**
+     * 创建临时节点
+     * @param path
+     */
     protected abstract void createEphemeral(String path);
 
     protected abstract void createPersistent(String path, String data);
 
     protected abstract void createEphemeral(String path, String data);
-
+    /**
+     * 检测该节点是否存在
+     * @param path
+     * @return
+     */
     public abstract boolean checkExists(String path);
-
+    /**
+     * 创建子节点监听器
+     * @param path
+     * @param listener
+     * @return
+     */
     protected abstract TargetChildListener createTargetChildListener(String path, ChildListener listener);
-
+    /**
+     * 为子节点添加监听器
+     * @param path
+     * @param listener
+     * @return
+     */
     protected abstract List<String> addTargetChildListener(String path, TargetChildListener listener);
 
     protected abstract TargetDataListener createTargetDataListener(String path, DataListener listener);
@@ -210,7 +249,11 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
     protected abstract void addTargetDataListener(String path, TargetDataListener listener);
 
     protected abstract void addTargetDataListener(String path, TargetDataListener listener, Executor executor);
-
+    /**
+     * 移除子节点监听器
+     * @param path
+     * @param listener
+     */
     protected abstract void removeTargetDataListener(String path, TargetDataListener listener);
 
     protected abstract void removeTargetChildListener(String path, TargetChildListener listener);

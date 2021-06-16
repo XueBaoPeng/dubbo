@@ -22,16 +22,32 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 public interface ZookeeperClient {
-
+    /**
+     * 创建client
+     * @param path
+     * @param ephemeral
+     */
     void create(String path, boolean ephemeral);
-
+    /**
+     * 删除client
+     * @param path
+     */
     void delete(String path);
-
+    /**
+     * 获得子节点集合
+     * @param path
+     * @return
+     */
     List<String> getChildren(String path);
-
+    /**
+     * 向zookeeper的该节点发起订阅，获得该节点所有
+     * @param path
+     * @param listener
+     * @return
+     */
     List<String> addChildListener(String path, ChildListener listener);
 
-    /**
+    /**移除该节点的子节点监听器
      * @param path:    directory. All of child of path will be listened.
      * @param listener
      */
@@ -47,15 +63,30 @@ public interface ZookeeperClient {
     void removeDataListener(String path, DataListener listener);
 
     void removeChildListener(String path, ChildListener listener);
-
+    /**
+     * 新增状态监听器
+     * @param listener
+     */
     void addStateListener(StateListener listener);
-
+    /**
+     * 移除状态监听
+     * @param listener
+     */
     void removeStateListener(StateListener listener);
-
+    /**
+     * 判断是否连接
+     * @return
+     */
     boolean isConnected();
-
+    /**
+     * 关闭客户端
+     */
     void close();
 
+    /**
+     * 获得url
+     * @return
+     */
     URL getUrl();
 
     void create(String path, String content, boolean ephemeral);

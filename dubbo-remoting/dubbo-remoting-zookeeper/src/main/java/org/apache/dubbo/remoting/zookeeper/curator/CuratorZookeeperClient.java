@@ -50,12 +50,14 @@ import java.util.concurrent.TimeUnit;
 
 import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
+//该类是Curator框架提供的一套高级API，简化了ZooKeeper的操作，从而对客户端的实现。
 public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZookeeperClient.NodeCacheListenerImpl, CuratorZookeeperClient.CuratorWatcherImpl> {
 
     protected static final Logger logger = LoggerFactory.getLogger(CuratorZookeeperClient.class);
     private static final String ZK_SESSION_EXPIRE_KEY = "zk.session.expire";
 
     static final Charset CHARSET = StandardCharsets.UTF_8;
+    //框架式客户端
     private final CuratorFramework client;
     private static Map<String, NodeCache> nodeCacheMap = new ConcurrentHashMap<>();
 
@@ -64,6 +66,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         try {
             int timeout = url.getParameter(TIMEOUT_KEY, DEFAULT_CONNECTION_TIMEOUT_MS);
             int sessionExpireMs = url.getParameter(ZK_SESSION_EXPIRE_KEY, DEFAULT_SESSION_TIMEOUT_MS);
+            // 工厂创建者
             CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
                     .connectString(url.getBackupAddress())
                     .retryPolicy(new RetryNTimes(1, 1000))
@@ -73,8 +76,11 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             if (authority != null && authority.length() > 0) {
                 builder = builder.authorization("digest", authority.getBytes());
             }
+            // 创建客户端
             client = builder.build();
+            // 添加监听器
             client.getConnectionStateListenable().addListener(new CuratorConnectionStateListener(url));
+            // 启动客户端
             client.start();
             boolean connected = client.blockUntilConnected(timeout, TimeUnit.MILLISECONDS);
             if (!connected) {
@@ -344,11 +350,12 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             } catch (Exception e) {
                 logger.warn("Curator client state changed, but failed to get the related zk session instance.");
             }
-
+            // 如果为状态为lost，则改变为未连接
             if (state == ConnectionState.LOST) {
                 logger.warn("Curator zookeeper session " + Long.toHexString(lastSessionId) + " expired.");
                 CuratorZookeeperClient.this.stateChanged(StateListener.SESSION_LOST);
             } else if (state == ConnectionState.SUSPENDED) {
+                // 改变状态为连接
                 logger.warn("Curator zookeeper connection of session " + Long.toHexString(sessionId) + " timed out. " +
                         "connection timeout value is " + timeout + ", session expire timeout value is " + sessionExpireMs);
                 CuratorZookeeperClient.this.stateChanged(StateListener.SUSPENDED);
@@ -357,6 +364,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
                 logger.info("Curator zookeeper client instance initiated successfully, session id is " + Long.toHexString(sessionId));
                 CuratorZookeeperClient.this.stateChanged(StateListener.CONNECTED);
             } else if (state == ConnectionState.RECONNECTED) {
+                // 改变状态为未连接
                 if (lastSessionId == sessionId && sessionId != UNKNOWN_SESSION_ID) {
                     logger.warn("Curator zookeeper connection recovered from connection lose, " +
                             "reuse the old session " + Long.toHexString(sessionId));

@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.remoting.zookeeper;
 
+//该接口是状态监听器，其中定义了一个状态更改的方法以及三种状态。
 public interface StateListener {
 
     int SESSION_LOST = 0;
