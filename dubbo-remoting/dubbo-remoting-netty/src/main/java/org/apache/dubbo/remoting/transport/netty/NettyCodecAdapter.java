@@ -41,19 +41,25 @@ import static org.apache.dubbo.remoting.Constants.MIN_BUFFER_SIZE;
 
 /**
  * NettyCodecAdapter.
+ * 该类是基于netty3实现的编解码类。
  */
 final class NettyCodecAdapter {
 
+    // 编码者
     private final ChannelHandler encoder = new InternalEncoder();
 
+    //解码者
     private final ChannelHandler decoder = new InternalDecoder();
 
+    //编解码器
     private final Codec2 codec;
 
     private final URL url;
 
+    //缓冲区大小
     private final int bufferSize;
 
+    //通道对象
     private final org.apache.dubbo.remoting.ChannelHandler handler;
 
     public NettyCodecAdapter(Codec2 codec, URL url, org.apache.dubbo.remoting.ChannelHandler handler) {
@@ -61,6 +67,7 @@ final class NettyCodecAdapter {
         this.url = url;
         this.handler = handler;
         int b = url.getPositiveParameter(BUFFER_KEY, DEFAULT_BUFFER_SIZE);
+        // 如果缓存区大小在16字节以内，则设置配置大小，如果不是，则设置8字节的缓冲区大小
         this.bufferSize = b >= MIN_BUFFER_SIZE && b <= MAX_BUFFER_SIZE ? b : DEFAULT_BUFFER_SIZE;
     }
 

@@ -50,15 +50,19 @@ import static org.apache.dubbo.common.constants.CommonConstants.IO_THREADS_KEY;
 
 /**
  * NettyServer
+ * 该类继承了AbstractServer，实现了Server，是基于netty3实现的服务器类
  */
 public class NettyServer extends AbstractServer implements RemotingServer {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
 
+    //连接该服务器的通道集合
     private Map<String, Channel> channels; // <ip:port, channel>
 
+    //服务器引导类对象
     private ServerBootstrap bootstrap;
 
+    //通道
     private org.jboss.netty.channel.Channel channel;
 
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
@@ -67,17 +71,23 @@ public class NettyServer extends AbstractServer implements RemotingServer {
 
     @Override
     protected void doOpen() throws Throwable {
+        // 设置日志工厂
         NettyHelper.setNettyLoggerFactory();
+        // 创建线程池
         ExecutorService boss = Executors.newCachedThreadPool(new NamedThreadFactory("NettyServerBoss", true));
         ExecutorService worker = Executors.newCachedThreadPool(new NamedThreadFactory("NettyServerWorker", true));
+        // 新建通道工厂
         ChannelFactory channelFactory = new NioServerSocketChannelFactory(boss, worker, getUrl().getPositiveParameter(IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS));
+        // 新建服务引导类对象
         bootstrap = new ServerBootstrap(channelFactory);
-
+        // 新建通道处理器
         final NettyHandler nettyHandler = new NettyHandler(getUrl(), this);
+        // 获得通道集合
         channels = nettyHandler.getChannels();
         // https://issues.jboss.org/browse/NETTY-365
         // https://issues.jboss.org/browse/NETTY-379
         // final Timer timer = new HashedWheelTimer(new NamedThreadFactory("NettyIdleTimer", true));
+        // 禁用nagle算法，将数据立即发送出去。纳格算法是以减少封包传送量来增进TCP/IP网络的效能
         bootstrap.setOption("child.tcpNoDelay", true);
         bootstrap.setOption("backlog", getUrl().getPositiveParameter(BACKLOG_KEY, Constants.DEFAULT_BACKLOG));
         bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
@@ -96,6 +106,7 @@ public class NettyServer extends AbstractServer implements RemotingServer {
             }
         });
         // bind
+        // bind 绑定地址，也就是启用服务器
         channel = bootstrap.bind(getBindAddress());
     }
 
@@ -104,16 +115,20 @@ public class NettyServer extends AbstractServer implements RemotingServer {
         try {
             if (channel != null) {
                 // unbind.
+                // unbind.关闭通道
                 channel.close();
             }
         } catch (Throwable e) {
             logger.warn(e.getMessage(), e);
         }
         try {
+            // 获得所有连接该服务器的通道集合
             Collection<org.apache.dubbo.remoting.Channel> channels = getChannels();
             if (CollectionUtils.isNotEmpty(channels)) {
+                // 遍历通道集合
                 for (org.apache.dubbo.remoting.Channel channel : channels) {
                     try {
+                        // 关闭通道连接
                         channel.close();
                     } catch (Throwable e) {
                         logger.warn(e.getMessage(), e);
@@ -144,6 +159,7 @@ public class NettyServer extends AbstractServer implements RemotingServer {
     public Collection<Channel> getChannels() {
         Collection<Channel> chs = new HashSet<Channel>();
         for (Channel channel : this.channels.values()) {
+            // 如果通道连接，则加入集合，返回
             if (channel.isConnected()) {
                 chs.add(channel);
             } else {

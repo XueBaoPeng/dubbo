@@ -23,6 +23,7 @@ import org.jboss.netty.logging.AbstractInternalLogger;
 import org.jboss.netty.logging.InternalLogger;
 import org.jboss.netty.logging.InternalLoggerFactory;
 
+//该类是设置日志的工具类，其中基于netty3的InternalLoggerFactory实现类一个DubboLoggerFactory。这个我就不讲解了，比较好理解，不理解也无伤大雅。
 final class NettyHelper {
 
     public static void setNettyLoggerFactory() {

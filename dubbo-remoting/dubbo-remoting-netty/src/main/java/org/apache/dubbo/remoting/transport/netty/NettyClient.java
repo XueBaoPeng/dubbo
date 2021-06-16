@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * NettyClient.
+ * 该类继承了AbstractClient，是基于netty3实现的客户端类
  */
 public class NettyClient extends AbstractClient {
 
@@ -48,11 +49,14 @@ public class NettyClient extends AbstractClient {
 
     // ChannelFactory's closure has a DirectMemory leak, using static to avoid
     // https://issues.jboss.org/browse/NETTY-424
+    //通道工厂，用static来避免直接缓存区的一个OOM问题
     private static final ChannelFactory CHANNEL_FACTORY = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(new NamedThreadFactory("NettyClientBoss", true)),
             Executors.newCachedThreadPool(new NamedThreadFactory("NettyClientWorker", true)),
             Constants.DEFAULT_IO_THREADS);
+    //客户端引导对象
     private ClientBootstrap bootstrap;
 
+    //通道
     private volatile Channel channel; // volatile, please copy reference to use
 
     public NettyClient(final URL url, final ChannelHandler handler) throws RemotingException {
@@ -61,22 +65,37 @@ public class NettyClient extends AbstractClient {
 
     @Override
     protected void doOpen() throws Throwable {
+        // 设置日志工厂
         NettyHelper.setNettyLoggerFactory();
+        // 实例化客户端引导类
         bootstrap = new ClientBootstrap(CHANNEL_FACTORY);
         // config
         // @see org.jboss.netty.channel.socket.SocketChannelConfig
+        // 配置选择项
         bootstrap.setOption("keepAlive", true);
         bootstrap.setOption("tcpNoDelay", true);
         bootstrap.setOption("connectTimeoutMillis", getConnectTimeout());
+        // 创建通道处理器
         final NettyHandler nettyHandler = new NettyHandler(getUrl(), this);
+        // 设置责任链路
         bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+            /**
+             * 获得通道
+             * @return
+             */
             @Override
             public ChannelPipeline getPipeline() {
+                // 新建编解码
                 NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
+                // 获得管道
                 ChannelPipeline pipeline = Channels.pipeline();
+                // 设置解码器
                 pipeline.addLast("decoder", adapter.getDecoder());
+                // 设置编码器
                 pipeline.addLast("encoder", adapter.getEncoder());
+                // 设置通道处理器
                 pipeline.addLast("handler", nettyHandler);
+                // 返回通道
                 return pipeline;
             }
         });
@@ -85,32 +104,41 @@ public class NettyClient extends AbstractClient {
     @Override
     protected void doConnect() throws Throwable {
         long start = System.currentTimeMillis();
+        // 用引导类连接
         ChannelFuture future = bootstrap.connect(getConnectAddress());
         try {
+            // 在超时时间内是否连接完成
             boolean ret = future.awaitUninterruptibly(getConnectTimeout(), TimeUnit.MILLISECONDS);
 
             if (ret && future.isSuccess()) {
+                // 获得通道
                 Channel newChannel = future.getChannel();
+                // 异步修改此通道
                 newChannel.setInterestOps(Channel.OP_READ_WRITE);
                 try {
                     // Close old channel
+                    // Close old channel 关闭旧的通道
                     Channel oldChannel = NettyClient.this.channel; // copy reference
                     if (oldChannel != null) {
                         try {
                             if (logger.isInfoEnabled()) {
                                 logger.info("Close old netty channel " + oldChannel + " on create new netty channel " + newChannel);
                             }
+                            // 关闭
                             oldChannel.close();
                         } finally {
+                            // 移除通道
                             NettyChannel.removeChannelIfDisconnected(oldChannel);
                         }
                     }
                 } finally {
+                    // 如果客户端关闭
                     if (NettyClient.this.isClosed()) {
                         try {
                             if (logger.isInfoEnabled()) {
                                 logger.info("Close new netty channel " + newChannel + ", because the client closed.");
                             }
+                            // 关闭通道
                             newChannel.close();
                         } finally {
                             NettyClient.this.channel = null;

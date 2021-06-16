@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-
+//该类是基于netty3的buffer重新实现的缓冲区，它实现了ChannelBuffer接口，并且有一个属性：
 public class NettyBackedChannelBuffer implements ChannelBuffer {
 
     private org.jboss.netty.buffer.ChannelBuffer buffer;

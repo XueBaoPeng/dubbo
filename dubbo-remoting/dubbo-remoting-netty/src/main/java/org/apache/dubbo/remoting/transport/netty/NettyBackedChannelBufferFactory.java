@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 
 /**
  * Wrap netty dynamic channel buffer.
+ * 该类是创建缓冲区的工厂类。它实现了ChannelBufferFactory接口，也就是实现类它的三种获得缓冲区的方法。
  */
 public class NettyBackedChannelBufferFactory implements ChannelBufferFactory {
 
