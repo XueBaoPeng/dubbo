@@ -25,28 +25,38 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * URL statistics. (API, Cached, ThreadSafe)
- *
+ * 该类是rpc的一些状态监控，其中封装了许多的计数器，用来记录rpc调用的状态。
  * @see org.apache.dubbo.rpc.filter.ActiveLimitFilter
  * @see org.apache.dubbo.rpc.filter.ExecuteLimitFilter
  * @see org.apache.dubbo.rpc.cluster.loadbalance.LeastActiveLoadBalance
  */
 public class RpcStatus {
 
+    //uri对应的状态集合，key为uri，value为RpcStatus对象
     private static final ConcurrentMap<String, RpcStatus> SERVICE_STATISTICS = new ConcurrentHashMap<String,
             RpcStatus>();
 
+    //method对应的状态集合，key是uri，第二个key是方法名methodName
     private static final ConcurrentMap<String, ConcurrentMap<String, RpcStatus>> METHOD_STATISTICS =
             new ConcurrentHashMap<String, ConcurrentMap<String, RpcStatus>>();
 
     private final ConcurrentMap<String, Object> values = new ConcurrentHashMap<String, Object>();
 
+    //活跃状态
     private final AtomicInteger active = new AtomicInteger();
+    //总的数量
     private final AtomicLong total = new AtomicLong();
+    //失败的个数
     private final AtomicInteger failed = new AtomicInteger();
+    //总调用时长
     private final AtomicLong totalElapsed = new AtomicLong();
+    //总调用失败时长
     private final AtomicLong failedElapsed = new AtomicLong();
+    //最大调用时长
     private final AtomicLong maxElapsed = new AtomicLong();
+    //最大调用失败时长
     private final AtomicLong failedMaxElapsed = new AtomicLong();
+    //最大调用成功时长
     private final AtomicLong succeededMaxElapsed = new AtomicLong();
 
     private RpcStatus() {
@@ -97,6 +107,7 @@ public class RpcStatus {
 
     /**
      * @param url
+     * 开始计数
      */
     public static boolean beginCount(URL url, String methodName, int max) {
         max = (max <= 0) ? Integer.MAX_VALUE : max;
@@ -112,11 +123,12 @@ public class RpcStatus {
                 return false;
             }
 
+            // 对该方法对活跃计数器加一
             if (methodStatus.active.compareAndSet(i, i + 1)) {
                 break;
             }
         }
-
+        // 对该url对应对活跃计数器加一
         appStatus.active.incrementAndGet();
 
         return true;

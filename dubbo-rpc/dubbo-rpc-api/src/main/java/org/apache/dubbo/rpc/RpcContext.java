@@ -50,7 +50,8 @@ import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
  * Note: RpcContext is a temporary state holder. States in RpcContext changes every time when request is sent or received.
  * For example: A invokes B, then B invokes C. On service B, RpcContext saves invocation info from A to B before B
  * starts invoking C, and saves invocation info from B to C after B invokes C.
- *
+ *该类就是远程调用的上下文，贯穿着整个调用，例如A调用B，然后B调用C。在服务B上，RpcContext在B之前将调用信息从A保存到B。
+ * 开始调用C，并在B调用C后将调用信息从B保存到C。RpcContext保存了调用信息
  * @export
  * @see org.apache.dubbo.rpc.filter.ContextFilter
  */
@@ -58,6 +59,7 @@ public class RpcContext {
 
     /**
      * use internal thread local to improve performance
+     * 本地上下文
      */
     // FIXME REQUEST_CONTEXT
     private static final InternalThreadLocal<RpcContext> LOCAL = new InternalThreadLocal<RpcContext>() {
@@ -67,6 +69,7 @@ public class RpcContext {
         }
     };
 
+    //服务上下文
     // FIXME RESPONSE_CONTEXT
     private static final InternalThreadLocal<RpcContext> SERVER_LOCAL = new InternalThreadLocal<RpcContext>() {
         @Override
@@ -75,35 +78,48 @@ public class RpcContext {
         }
     };
 
+    //附加值集合
     protected final Map<String, Object> attachments = new HashMap<>();
+    //上下文值
     private final Map<String, Object> values = new HashMap<String, Object>();
 
+    //url集合
     private List<URL> urls;
 
+    //当前的url
     private URL url;
 
+    //方法名称
     private String methodName;
 
+    // 参数类型集合
     private Class<?>[] parameterTypes;
 
+    //参数集合
     private Object[] arguments;
 
+    //本地地址
     private InetSocketAddress localAddress;
 
+    //远程地址
     private InetSocketAddress remoteAddress;
 
     private String remoteApplicationName;
 
+    //实体域集合
     @Deprecated
     private List<Invoker<?>> invokers;
     @Deprecated
     private Invoker<?> invoker;
+    //会话域
     @Deprecated
     private Invocation invocation;
 
     // now we don't use the 'values' map to hold these objects
     // we want these objects to be as generic as possible
+    //请求
     private Object request;
+    //响应
     private Object response;
     private AsyncContext asyncContext;
 

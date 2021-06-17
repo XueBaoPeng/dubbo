@@ -52,18 +52,25 @@ public class RpcInvocation implements Invocation, Serializable {
 
     private String targetServiceUniqueName;
     private String protocolServiceKey;
-
+    /**
+     * 方法名称
+     */
     private String methodName;
     private String serviceName;
-
+    /**
+     * 参数类型集合
+     */
     private transient Class<?>[] parameterTypes;
     private String parameterTypesDesc;
     private String[] compatibleParamSignatures;
-
+    /**
+     * 参数集合
+     */
     private Object[] arguments;
 
     /**
      * Passed to the remote server during RPC call
+     * 附加值
      */
     private Map<String, Object> attachments;
 
@@ -71,7 +78,9 @@ public class RpcInvocation implements Invocation, Serializable {
      * Only used on the caller side, will not appear on the wire.
      */
     private Map<Object, Object> attributes = new HashMap<>();
-
+    /**
+     * 实体域
+     */
     private transient Invoker<?> invoker;
 
     private transient Class<?> returnType;

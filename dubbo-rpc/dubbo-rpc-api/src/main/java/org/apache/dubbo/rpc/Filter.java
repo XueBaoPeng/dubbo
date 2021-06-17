@@ -43,6 +43,7 @@ import org.apache.dubbo.common.extension.SPI;
 @SPI
 public interface Filter {
     /**
+     * 该接口是invoker调用时过滤器接口，其中就只有一个invoke方法。在该方法中对调用进行过滤
      * Make sure call invoker.invoke() in your implementation.
      */
     Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException;
