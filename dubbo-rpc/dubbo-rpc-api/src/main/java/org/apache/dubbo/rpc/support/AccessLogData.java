@@ -66,6 +66,7 @@ public final class AccessLogData {
      * Default constructor.
      */
     private AccessLogData() {
+        // 获得rpc上下文
         RpcContext context = RpcContext.getContext();
         data = new HashMap<>();
         setLocalHost(context.getLocalHost());
@@ -269,12 +270,18 @@ public final class AccessLogData {
     }
     
     public void buildAccessLogData(Invoker<?> invoker, Invocation inv) {
+        // 获得调用的接口名称
         setServiceName(invoker.getInterface().getName());
+        // 拼接方法名
         setMethodName(inv.getMethodName());
+        // 获得版本号
         setVersion(invoker.getUrl().getParameter(VERSION_KEY));
+        // 获得组，是消费者侧还是生产者侧
         setGroup(invoker.getUrl().getParameter(GROUP_KEY));
         setInvocationTime(new Date());
+        // 拼接参数类型
         setTypes(inv.getParameterTypes());
+        // 拼接参数
         setArguments(inv.getArguments());
     }
 

@@ -38,7 +38,7 @@ import static org.apache.dubbo.rpc.Constants.ACTIVES_KEY;
  *      If there are more than configured (in this example 2) is trying to invoke remote method, then rest of invocation
  *      will wait for configured timeout(default is 0 second) before invocation gets kill by dubbo.
  * </pre>
- *
+ * 该类时对于每个服务的每个方法的最大可并行调用数量限制的过滤器，它是在服务消费者侧的过滤。
  * @see Filter
  */
 @Activate(group = CONSUMER, value = ACTIVES_KEY)
@@ -46,25 +46,39 @@ public class ActiveLimitFilter implements Filter, Filter.Listener {
 
     private static final String ACTIVELIMIT_FILTER_START_TIME = "activelimit_filter_start_time";
 
+    /*
+    该类只有这一个方法。该过滤器是用来限制调用数量，先进行调用数量的检测，如果没有到达最大的调用数量，
+    则先调用后面的调用链，如果在后面的调用链失败，则记录相关时间，如果成功也记录相关时间和调用次数。
+     */
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获得url对象
         URL url = invoker.getUrl();
+        // 获得方法名称
         String methodName = invocation.getMethodName();
+        // 获得并发调用数（单个服务的单个方法），默认为0
         int max = invoker.getUrl().getMethodParameter(methodName, ACTIVES_KEY, 0);
+        // 通过方法名来获得对应的状态
         final RpcStatus rpcStatus = RpcStatus.getStatus(invoker.getUrl(), invocation.getMethodName());
         if (!RpcStatus.beginCount(url, methodName, max)) {
+            // 获得该方法调用的超时次数
             long timeout = invoker.getUrl().getMethodParameter(invocation.getMethodName(), TIMEOUT_KEY, 0);
+            // 获得系统时间
             long start = System.currentTimeMillis();
             long remain = timeout;
             synchronized (rpcStatus) {
+                // 当活跃数量大于等于最大的并发调用数量时一直循环
                 while (!RpcStatus.beginCount(url, methodName, max)) {
                     try {
+                        // 等待超时时间
                         rpcStatus.wait(remain);
                     } catch (InterruptedException e) {
                         // ignore
                     }
+                    // 获得累计时间
                     long elapsed = System.currentTimeMillis() - start;
                     remain = timeout - elapsed;
+                    // 如果累计时间大于超时时间，则抛出异常
                     if (remain <= 0) {
                         throw new RpcException(RpcException.LIMIT_EXCEEDED_EXCEPTION,
                                 "Waiting concurrent invoke timeout in client-side for service:  " +
