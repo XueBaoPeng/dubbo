@@ -42,6 +42,7 @@ import static org.apache.dubbo.rpc.Constants.ACTIVES_KEY;
  * @see Filter
  */
 @Activate(group = CONSUMER, value = ACTIVES_KEY)
+//可以看到group为consumer组的，也就是服务消费者侧的，则是服务引用过程中的的过滤器。
 public class ActiveLimitFilter implements Filter, Filter.Listener {
 
     private static final String ACTIVELIMIT_FILTER_START_TIME = "activelimit_filter_start_time";

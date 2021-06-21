@@ -62,6 +62,7 @@ import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 
 /**
  * GenericInvokerFilter.
+ * 该过滤器就是对于泛化调用的请求和结果进行反序列化和序列化的操作，它是服务提供者侧的
  */
 @Activate(group = CommonConstants.PROVIDER, order = -20000)
 public class GenericFilter implements Filter, Filter.Listener {
@@ -69,15 +70,21 @@ public class GenericFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
+        // 如果是泛化调用
         if ((inv.getMethodName().equals($INVOKE) || inv.getMethodName().equals($INVOKE_ASYNC))
                 && inv.getArguments() != null
                 && inv.getArguments().length == 3
                 && !GenericService.class.isAssignableFrom(invoker.getInterface())) {
+            // 获得请求名字
             String name = ((String) inv.getArguments()[0]).trim();
+            // 获得请求参数类型
             String[] types = (String[]) inv.getArguments()[1];
+            // 获得请求参数
             Object[] args = (Object[]) inv.getArguments()[2];
             try {
+                // 获得方法
                 Method method = ReflectUtils.findMethodByMethodSignature(invoker.getInterface(), name, types);
+                // 获得该方法的参数类型
                 Class<?>[] params = method.getParameterTypes();
                 if (args == null) {
                     args = new Object[params.length];
@@ -91,16 +98,19 @@ public class GenericFilter implements Filter, Filter.Listener {
                     throw new RpcException("GenericFilter#invoke args.length != types.length, please check your "
                             + "params");
                 }
+                // 获得附加值
                 String generic = inv.getAttachment(GENERIC_KEY);
 
+                // 如果附加值为空，在用上下文携带的附加值
                 if (StringUtils.isBlank(generic)) {
                     generic = RpcContext.getContext().getAttachment(GENERIC_KEY);
                 }
-
+                // 如果附加值还是为空或者是默认的泛化序列化类型
                 if (StringUtils.isEmpty(generic)
                         || ProtocolUtils.isDefaultGenericSerialization(generic)
                         || ProtocolUtils.isGenericReturnRawResult(generic)) {
                     try {
+                        // 直接进行类型转化
                         args = PojoUtils.realize(args, params, method.getGenericParameterTypes());
                     } catch (IllegalArgumentException e) {
                         throw new RpcException(e);
@@ -123,6 +133,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                     for (int i = 0; i < args.length; i++) {
                         if (byte[].class == args[i].getClass()) {
                             try (UnsafeByteArrayInputStream is = new UnsafeByteArrayInputStream((byte[]) args[i])) {
+                                // 使用nativejava方式反序列化
                                 args[i] = ExtensionLoader.getExtensionLoader(Serialization.class)
                                         .getExtension(GENERIC_SERIALIZATION_NATIVE_JAVA)
                                         .deserialize(null, is).readObject();
@@ -142,6 +153,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                 } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                     for (int i = 0; i < args.length; i++) {
                         if (args[i] instanceof JavaBeanDescriptor) {
+                            // 用JavaBean方式反序列化
                             args[i] = JavaBeanSerializeUtil.deserialize((JavaBeanDescriptor) args[i]);
                         } else {
                             throw new RpcException(
@@ -180,7 +192,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                                 inv.getObjectAttachments(), inv.getAttributes());
                 rpcInvocation.setInvoker(inv.getInvoker());
                 rpcInvocation.setTargetServiceUniqueName(inv.getTargetServiceUniqueName());
-
+                // 调用下一个调用链
                 return invoker.invoke(rpcInvocation);
             } catch (NoSuchMethodException | ClassNotFoundException e) {
                 throw new RpcException(e.getMessage(), e);
@@ -227,6 +239,7 @@ public class GenericFilter implements Filter, Filter.Listener {
             }
             if (ProtocolUtils.isJavaGenericSerialization(generic)) {
                 try {
+                    // 使用JavaBean方式序列化返回结果
                     UnsafeByteArrayOutputStream os = new UnsafeByteArrayOutputStream(512);
                     ExtensionLoader.getExtensionLoader(Serialization.class).getExtension(GENERIC_SERIALIZATION_NATIVE_JAVA)
                             .serialize(null, os).writeObject(appResponse.getValue());
@@ -241,6 +254,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                 appResponse.setValue(JavaBeanSerializeUtil.serialize(appResponse.getValue(), JavaBeanAccessor.METHOD));
             } else if (ProtocolUtils.isProtobufGenericSerialization(generic)) {
                 try {
+                    // 直接转化为pojo类型然后返回
                     UnsafeByteArrayOutputStream os = new UnsafeByteArrayOutputStream(512);
                     ExtensionLoader.getExtensionLoader(Serialization.class)
                             .getExtension(GENERIC_SERIALIZATION_PROTOBUF)

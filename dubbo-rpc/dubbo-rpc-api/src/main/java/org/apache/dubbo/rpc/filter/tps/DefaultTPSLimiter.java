@@ -33,26 +33,35 @@ import static org.apache.dubbo.rpc.Constants.DEFAULT_TPS_LIMIT_INTERVAL;
  * @see org.apache.dubbo.rpc.filter.TpsLimitFilter
  */
 public class DefaultTPSLimiter implements TPSLimiter {
-
+    /**
+     * 统计项集合
+     */
     private final ConcurrentMap<String, StatItem> stats = new ConcurrentHashMap<String, StatItem>();
 
     @Override
     public boolean isAllowable(URL url, Invocation invocation) {
+        // 获得tps限制大小，默认-1，不限制
         int rate = url.getParameter(TPS_LIMIT_RATE_KEY, -1);
+        // 获得限流周期
         long interval = url.getParameter(TPS_LIMIT_INTERVAL_KEY, DEFAULT_TPS_LIMIT_INTERVAL);
         String serviceKey = url.getServiceKey();
+        // 如果限制
         if (rate > 0) {
+            // 从集合中获得统计项
             StatItem statItem = stats.get(serviceKey);
+            // 如果为空，则新建
             if (statItem == null) {
                 stats.putIfAbsent(serviceKey, new StatItem(serviceKey, rate, interval));
                 statItem = stats.get(serviceKey);
             } else {
                 //rate or interval has changed, rebuild
+                // 移除该服务的统计项
                 if (statItem.getRate() != rate || statItem.getInterval() != interval) {
                     stats.put(serviceKey, new StatItem(serviceKey, rate, interval));
                     statItem = stats.get(serviceKey);
                 }
             }
+            // 返回是否允许
             return statItem.isAllowable();
         } else {
             StatItem statItem = stats.get(serviceKey);

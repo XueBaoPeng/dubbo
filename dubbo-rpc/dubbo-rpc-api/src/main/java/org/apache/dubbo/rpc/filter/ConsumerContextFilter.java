@@ -39,12 +39,22 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_K
  *
  * @see org.apache.dubbo.rpc.Filter
  * @see RpcContext
+ * 该过滤器做的是在当前的RpcContext中记录本地调用的一次状态信息。
  */
 @Activate(group = CONSUMER, order = -10000)
 public class ConsumerContextFilter implements Filter {
 
+    /**
+     * 可以看到RpcContext记录了一次调用状态信息，然后先调用后面的调用链，
+     * 再回来把附加值设置到RpcContext中。然后返回RpcContext，再清空，这样是因为后面的调用链中的附加值对前面的调用链是不可见的
+     * @param invoker
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 设置rpc上下文
         RpcContext context = RpcContext.getContext();
         context.setInvoker(invoker)
                 .setInvocation(invocation)
@@ -52,7 +62,9 @@ public class ConsumerContextFilter implements Filter {
                 .setRemoteAddress(invoker.getUrl().getHost(), invoker.getUrl().getPort())
                 .setRemoteApplicationName(invoker.getUrl().getParameter(REMOTE_APPLICATION_KEY))
                 .setAttachment(REMOTE_APPLICATION_KEY, invoker.getUrl().getParameter(APPLICATION_KEY));
+        // 如果该会话域是rpc会话域
         if (invocation instanceof RpcInvocation) {
+            // 设置实体域
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
 
@@ -66,6 +78,7 @@ public class ConsumerContextFilter implements Filter {
                                 + invocation.getMethodName() + ", terminate directly."), invocation);
             }
         }
+        // 调用下个调用链
         return invoker.invoke(invocation);
     }
 

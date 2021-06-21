@@ -52,7 +52,7 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 /**
  * ContextFilter set the provider RpcContext with invoker, invocation, local port it is using and host for
  * current execution thread.
- *
+ * 该过滤器做的是初始化rpc上下文
  * @see RpcContext
  */
 @Activate(group = PROVIDER, order = Integer.MIN_VALUE)
@@ -81,7 +81,9 @@ public class ContextFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获得会话域的附加值
         Map<String, Object> attachments = invocation.getObjectAttachments();
+        // 删除异步属性以避免传递给以下调用链
         if (attachments != null) {
             Map<String, Object> newAttach = new HashMap<>(attachments.size());
             for (Map.Entry<String, Object> entry : attachments.entrySet()) {
@@ -92,7 +94,7 @@ public class ContextFilter implements Filter, Filter.Listener {
             }
             attachments = newAttach;
         }
-
+        // 在rpc上下文添加上一个调用链的信息
         RpcContext context = RpcContext.getContext();
         context.setInvoker(invoker)
                 .setInvocation(invocation)
@@ -113,23 +115,26 @@ public class ContextFilter implements Filter, Filter.Listener {
         // merged from dubbox
         // we may already added some attachments into RpcContext before this filter (e.g. in rest protocol)
         if (attachments != null) {
+            // 把会话域中的附加值全部加入RpcContext中
             if (context.getObjectAttachments() != null) {
                 context.getObjectAttachments().putAll(attachments);
             } else {
                 context.setObjectAttachments(attachments);
             }
         }
-
+        // 如果会话域属于rpc的会话域，则设置实体域
         if (invocation instanceof RpcInvocation) {
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
 
         try {
             context.clearAfterEachInvoke(false);
+            // 调用下一个调用链
             return invoker.invoke(invocation);
         } finally {
             context.clearAfterEachInvoke(true);
             // IMPORTANT! For async scenario, we must remove context from current thread, so we always create a new RpcContext for the next invoke for the same thread.
+            // 移除本地的上下文
             RpcContext.removeContext(true);
             RpcContext.removeServerContext();
         }

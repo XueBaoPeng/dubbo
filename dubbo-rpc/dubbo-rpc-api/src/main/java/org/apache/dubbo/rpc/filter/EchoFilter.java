@@ -29,12 +29,14 @@ import static org.apache.dubbo.rpc.Constants.$ECHO;
 
 /**
  * Dubbo provided default Echo echo service, which is available for all dubbo provider service interface.
+ * 该过滤器是处理回声测试的方法
  */
 @Activate(group = CommonConstants.PROVIDER, order = -110000)
 public class EchoFilter implements Filter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
+        // 如果调用的方法是回声测试的方法 则直接返回结果，否则 调用下一个调用链
         if (inv.getMethodName().equals($ECHO) && inv.getArguments() != null && inv.getArguments().length == 1) {
             return AsyncRpcResult.newDefaultAsyncResult(inv.getArguments()[0], inv);
         }

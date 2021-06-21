@@ -31,7 +31,7 @@ public interface TPSLimiter {
 
     /**
      * judge if the current invocation is allowed by TPS rule
-     *
+     * 是否允许通过
      * @param url        url
      * @param invocation invocation
      * @return true allow the current invocation, otherwise, return false

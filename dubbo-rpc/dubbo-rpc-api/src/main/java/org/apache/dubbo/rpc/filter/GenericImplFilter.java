@@ -48,20 +48,25 @@ import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 
 /**
  * GenericImplInvokerFilter
+ * 该过滤器也是对于泛化调用的序列化检查和处理，它是消费者侧的过滤器
  */
 @Activate(group = CommonConstants.CONSUMER, value = GENERIC_KEY, order = 20000)
 public class GenericImplFilter implements Filter, Filter.Listener {
 
     private static final Logger logger = LoggerFactory.getLogger(GenericImplFilter.class);
-
+    /**
+     * 参数集合
+     */
     private static final Class<?>[] GENERIC_PARAMETER_TYPES = new Class<?>[]{String.class, String[].class, Object[].class};
 
     private static final String GENERIC_IMPL_MARKER = "GENERIC_IMPL";
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获得泛化的值
         String generic = invoker.getUrl().getParameter(GENERIC_KEY);
         // calling a generic impl service
+        // 如果该值是nativejava或者bean或者true，并且不是一个返回调用
         if (isCallingGenericImpl(generic, invocation)) {
             RpcInvocation invocation2 = new RpcInvocation(invocation);
 
@@ -70,17 +75,20 @@ public class GenericImplFilter implements Filter, Filter.Listener {
              * See {@link RpcUtils#sieveUnnecessaryAttachments(Invocation)}
              */
             invocation2.put(GENERIC_IMPL_MARKER, true);
-
+            // 获得方法名称
             String methodName = invocation2.getMethodName();
+            // 获得参数类型集合
             Class<?>[] parameterTypes = invocation2.getParameterTypes();
+            // 获得参数集合
             Object[] arguments = invocation2.getArguments();
-
+            // 把参数类型的名称放入集合
             String[] types = new String[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
                 types[i] = ReflectUtils.getName(parameterTypes[i]);
             }
 
             Object[] args;
+            // 对参数集合进行序列化
             if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                 args = new Object[arguments.length];
                 for (int i = 0; i < arguments.length; i++) {
@@ -95,9 +103,11 @@ public class GenericImplFilter implements Filter, Filter.Listener {
             } else {
                 invocation2.setMethodName($INVOKE);
             }
+            // 重新把序列化的参数放入
             invocation2.setParameterTypes(GENERIC_PARAMETER_TYPES);
             invocation2.setParameterTypesDesc(GENERIC_PARAMETER_DESC);
             invocation2.setArguments(new Object[]{methodName, types, args});
+            // 调用下一个调用链
             return invoker.invoke(invocation2);
         }
         // making a generic call to a normal service
@@ -156,20 +166,24 @@ public class GenericImplFilter implements Filter, Filter.Listener {
                         if (value == null) {
                             appResponse.setValue(value);
                         } else if (value instanceof JavaBeanDescriptor) {
+                            // 用javabean方式反序列化
                             appResponse.setValue(JavaBeanSerializeUtil.deserialize((JavaBeanDescriptor) value));
                         } else {
                             throw new RpcException("The type of result value is " + value.getClass().getName() + " other than " + JavaBeanDescriptor.class.getName() + ", and the result is " + value);
                         }
                     } else {
                         Type[] types = ReflectUtils.getReturnTypes(method);
+                        // 直接转化为pojo类型
                         appResponse.setValue(PojoUtils.realize(value, (Class<?>) types[0], types[1]));
                     }
                 } catch (NoSuchMethodException e) {
                     throw new RpcException(e.getMessage(), e);
                 }
+                // 如果调用链中有异常抛出，并且是GenericException类型的异常
             } else if (appResponse.getException() instanceof com.alibaba.dubbo.rpc.service.GenericException) {
                 com.alibaba.dubbo.rpc.service.GenericException exception = (com.alibaba.dubbo.rpc.service.GenericException) appResponse.getException();
                 try {
+                    // 获得异常类名
                     String className = exception.getExceptionClass();
                     Class<?> clazz = ReflectUtils.forName(className);
                     Throwable targetException = null;
