@@ -33,6 +33,8 @@ import java.lang.reflect.Method;
 
 /**
  * InvokerHandler
+ * 该类实现了InvocationHandler接口，动态代理类都必须要实现InvocationHandler接口，
+ * 而该类实现的是对于基础方法不适用rpc调用，其他方法使用rpc调用。
  */
 public class InvokerInvocationHandler implements InvocationHandler {
     private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
@@ -64,12 +66,15 @@ public class InvokerInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 获得方法名
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }
         String methodName = method.getName();
+        // 获得参数类型
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length == 0) {
+            // 基础方法，不使用 RPC 调用
             if ("toString".equals(methodName)) {
                 return invoker.toString();
             } else if ("$destroy".equals(methodName)) {
@@ -81,6 +86,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         } else if (parameterTypes.length == 1 && "equals".equals(methodName)) {
             return invoker.equals(args[0]);
         }
+        // rpc调用
         RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), protocolServiceKey, args);
         String serviceKey = invoker.getUrl().getServiceKey();
         rpcInvocation.setTargetServiceUniqueName(serviceKey);

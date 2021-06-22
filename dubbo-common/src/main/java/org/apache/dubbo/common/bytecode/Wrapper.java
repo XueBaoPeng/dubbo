@@ -38,6 +38,8 @@ import java.util.regex.Matcher;
 
 /**
  * Wrapper.
+ * Wrapper是用于创建某个对象的方法调用的包装器，利用字节码技术在调用方法时进行编译相关方法。
+ * 其中getWrapper就是获得Wrapper 对象，其中关键的是makeWrapper方法，所以我在上面加上了makeWrapper方法的解释，其中就是相关方法的字节码生成过程。
  */
 public abstract class Wrapper {
     private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>(); //class wrapper map
@@ -108,11 +110,12 @@ public abstract class Wrapper {
      * @return Wrapper instance(not null).
      */
     public static Wrapper getWrapper(Class<?> c) {
+        // 判断c是否继承 ClassGenerator.DC.class ，如果是，则拿到父类，避免重复包装
         while (ClassGenerator.isDynamicClass(c)) // can not wrapper on dynamic class.
         {
             c = c.getSuperclass();
         }
-
+        // 如果类为object类型
         if (c == Object.class) {
             return OBJECT_WRAPPER;
         }
@@ -121,17 +124,23 @@ public abstract class Wrapper {
     }
 
     private static Wrapper makeWrapper(Class<?> c) {
+        // 如果缓存里面没有该对象，则新建一个wrapper
         if (c.isPrimitive()) {
             throw new IllegalArgumentException("Can not create wrapper for primitive type: " + c);
         }
+        // 获得类名
 
         String name = c.getName();
+        // 获得类加载器
         ClassLoader cl = ClassUtils.getClassLoader(c);
 
+        // 设置属性的方法第一行public void setPropertyValue(Object o, String n, Object v){
         StringBuilder c1 = new StringBuilder("public void setPropertyValue(Object o, String n, Object v){ ");
+        // 获得属性的方法第一行 public Object getPropertyValue(Object o, String n){
         StringBuilder c2 = new StringBuilder("public Object getPropertyValue(Object o, String n){ ");
+        // 执行方法的第一行
         StringBuilder c3 = new StringBuilder("public Object invokeMethod(Object o, String n, Class[] p, Object[] v) throws " + InvocationTargetException.class.getName() + "{ ");
-
+        // 添加每个方法中被调用对象的类型转换的代码
         c1.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
         c2.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
         c3.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
@@ -141,6 +150,7 @@ public abstract class Wrapper {
         List<String> mns = new ArrayList<>(); // method names.
         List<String> dmns = new ArrayList<>(); // declaring method names.
 
+        // 遍历每个public的属性，放入setPropertyValue和getPropertyValue方法中
         // get all public field.
         for (Field f : c.getFields()) {
             String fn = f.getName();

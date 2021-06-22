@@ -34,6 +34,7 @@ import java.util.concurrent.CompletionException;
 
 /**
  * This Invoker works on provider side, delegates RPC to interface implementation.
+ * 该类实现了Invoker接口，是代理invoker对象的抽象类。
  */
 public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     Logger logger = LoggerFactory.getLogger(AbstractProxyInvoker.class);
@@ -78,9 +79,17 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     public void destroy() {
     }
 
+    /**
+     * 该类最关键的就是这两个方法，一个是invoke方法，调用了抽象方法doInvoke，
+     * 另一个则是抽象方法。该方法被子类实现。
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         try {
+            // 调用了抽象方法doInvoke
             Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
             CompletableFuture<Object> future = wrapWithFuture(value);
             CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {

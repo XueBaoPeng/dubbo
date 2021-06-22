@@ -426,6 +426,7 @@ public final class ReflectUtils {
     }
 
     /**
+     * 获得方法描述 这个方法描述是自定义：
      * get method desc.
      * int do(int arg1) => "do(I)I"
      * void do(String arg1,boolean arg2) => "do(Ljava/lang/String;Z)V"
