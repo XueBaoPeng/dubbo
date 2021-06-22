@@ -30,25 +30,34 @@ import java.util.List;
 
 /**
  * ListenerInvoker
+ * 该类实现了Invoker，是服务引用监听器的包装类。
  */
 public class ListenerInvokerWrapper<T> implements Invoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ListenerInvokerWrapper.class);
-
+    /**
+     * invoker对象
+     */
     private final Invoker<T> invoker;
-
+    /**
+     * 监听器集合
+     */
     private final List<InvokerListener> listeners;
 
+    //构造方法中直接调用了监听器的服务引用
     public ListenerInvokerWrapper(Invoker<T> invoker, List<InvokerListener> listeners) {
+        // 如果invoker为空则抛出异常
         if (invoker == null) {
             throw new IllegalArgumentException("invoker == null");
         }
         this.invoker = invoker;
         this.listeners = listeners;
+        // 遍历监听器
         if (CollectionUtils.isNotEmpty(listeners)) {
             for (InvokerListener listener : listeners) {
                 if (listener != null) {
                     try {
+                        // 调用在服务引用的时候进行监听
                         listener.referred(invoker);
                     } catch (Throwable t) {
                         logger.error(t.getMessage(), t);
@@ -86,8 +95,10 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
     @Override
     public void destroy() {
         try {
+            // 销毁invoker
             invoker.destroy();
         } finally {
+            // 销毁所有监听的实体域
             if (CollectionUtils.isNotEmpty(listeners)) {
                 for (InvokerListener listener : listeners) {
                     if (listener != null) {
