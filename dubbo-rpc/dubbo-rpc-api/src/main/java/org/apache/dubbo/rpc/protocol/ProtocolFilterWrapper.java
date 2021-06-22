@@ -35,6 +35,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.SERVICE_FILTER_K
 
 /**
  * ListenerProtocol
+ * 该类实现了Protocol接口，其中也用到了装饰模式，是对Protocol的装饰，是在服务引用和暴露的方法上加上了过滤器功能。
  */
 @Activate(order = 100)
 public class ProtocolFilterWrapper implements Protocol {
@@ -48,12 +49,15 @@ public class ProtocolFilterWrapper implements Protocol {
         this.protocol = protocol;
     }
 
+    //该方法就是创建带 Filter 链的 Invoker 对象。倒序的把每一个过滤器串连起来，形成一个invoker。
     private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String key, String group) {
         Invoker<T> last = invoker;
+        // 获得过滤器的所有扩展实现类实例集合
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
 
         if (!filters.isEmpty()) {
             for (int i = filters.size() - 1; i >= 0; i--) {
+                // 从最后一个过滤器开始循环，创建一个带有过滤器链的invoker对象
                 final Filter filter = filters.get(i);
                 last = new FilterNode<T>(invoker, last, filter);
             }
@@ -67,19 +71,38 @@ public class ProtocolFilterWrapper implements Protocol {
         return protocol.getDefaultPort();
     }
 
+    /**
+     * 该方法是在服务暴露上做了过滤器链的增强，也就是加上了过滤器。
+     * @param invoker Service invoker 服务的实体域
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
+        // 如果是注册中心，则直接暴露服务
         if (UrlUtils.isRegistry(invoker.getUrl())) {
             return protocol.export(invoker);
         }
+        // 服务提供侧暴露服务
         return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
     }
 
+    /**
+     * 该方法是在服务引用上做了过滤器链的增强，也就是加上了过滤器。
+     * @param type Service class 服务类名
+     * @param url  URL address for the remote service
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+        // 如果是注册中心，则直接引用
         if (UrlUtils.isRegistry(url)) {
             return protocol.refer(type, url);
         }
+        // 消费者侧引用服务
         return buildInvokerChain(protocol.refer(type, url), REFERENCE_FILTER_KEY, CommonConstants.CONSUMER);
     }
 

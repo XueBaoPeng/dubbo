@@ -38,6 +38,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.INVOKER_LISTENER
 
 /**
  * ListenerProtocol
+ * 该类也实现了Protocol，也是装饰了Protocol接口，但是它是在服务引用和暴露过程中加上了监听器的功能。
  */
 @Activate(order = 200)
 public class ProtocolListenerWrapper implements Protocol {
@@ -56,11 +57,20 @@ public class ProtocolListenerWrapper implements Protocol {
         return protocol.getDefaultPort();
     }
 
+    /**
+     * 该方法是在服务暴露上做了监听器功能的增强，也就是加上了监听器。
+     * @param invoker Service invoker 服务的实体域
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
+        // 如果是注册中心，则暴露该invoker
         if (UrlUtils.isRegistry(invoker.getUrl())) {
             return protocol.export(invoker);
         }
+        // 创建一个暴露者监听器包装类对象
         return new ListenerExporterWrapper<T>(protocol.export(invoker),
                 Collections.unmodifiableList(ExtensionLoader.getExtensionLoader(ExporterListener.class)
                         .getActivateExtension(invoker.getUrl(), EXPORTER_LISTENER_KEY)));
@@ -68,9 +78,11 @@ public class ProtocolListenerWrapper implements Protocol {
 
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+        // 如果是注册中心。则直接引用服务
         if (UrlUtils.isRegistry(url)) {
             return protocol.refer(type, url);
         }
+        // 创建引用服务监听器包装类对象
         return new ListenerInvokerWrapper<T>(protocol.refer(type, url),
                 Collections.unmodifiableList(
                         ExtensionLoader.getExtensionLoader(InvokerListener.class)
