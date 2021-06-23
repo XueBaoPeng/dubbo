@@ -24,11 +24,17 @@ import java.util.Map;
 
 /**
  * DubboExporter
+ * 该类继承了AbstractExporter，是dubbo协议中独有的服务暴露者。
+ * 其中对于服务暴露者用集合做了缓存，并且只重写了了unexport
  */
 public class DubboExporter<T> extends AbstractExporter<T> {
-
+    /**
+     * 服务key
+     */
     private final String key;
-
+    /**
+     * 服务暴露者集合
+     */
     private final Map<String, Exporter<?>> exporterMap;
 
     public DubboExporter(Invoker<T> invoker, String key, Map<String, Exporter<?>> exporterMap) {
@@ -39,6 +45,7 @@ public class DubboExporter<T> extends AbstractExporter<T> {
 
     @Override
     public void afterUnExport() {
+        // 从集合中移除该key
         exporterMap.remove(key);
     }
 
