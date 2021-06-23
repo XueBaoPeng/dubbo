@@ -52,18 +52,32 @@ import static org.apache.dubbo.rpc.Constants.SERIALIZATION_ID_KEY;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_SECURITY_CHECK_KEY;
 import static org.apache.dubbo.rpc.protocol.dubbo.CallbackServiceCodec.decodeInvocationArgument;
 
+/**
+ * 该类主要做了对于会话域内的数据进行序列化和解码。
+ */
 public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcInvocation.class);
 
+    /**
+     * 通道
+     */
     private Channel channel;
-
+    /**
+     * 序列化类型
+     */
     private byte serializationType;
-
+    /**
+     * 输入流
+     */
     private InputStream inputStream;
-
+    /**
+     * 请求
+     */
     private Request request;
-
+    /**
+     * 是否解码
+     */
     private volatile boolean hasDecoded;
 
     public DecodeableRpcInvocation(Channel channel, Request request, InputStream is, byte id) {
@@ -78,6 +92,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
     @Override
     public void decode() throws Exception {
+        // 如果没有解码，则进行解码
         if (!hasDecoded && channel != null && inputStream != null) {
             try {
                 decode(channel, inputStream);
@@ -88,6 +103,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
                 request.setBroken(true);
                 request.setData(e);
             } finally {
+                // 设置已经解码
                 hasDecoded = true;
             }
         }
@@ -102,21 +118,31 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
     }
 
+    /**
+     * 该方法就是处理Invocation内数据的逻辑，其中主要是做了序列化和解码。把读取出来的设置放入对对应位置传递给后面的调用
+     * @param channel channel.
+     * @param input   input stream.
+     * @return
+     * @throws IOException
+     */
     @Override
     public Object decode(Channel channel, InputStream input) throws IOException {
+        // 对数据进行反序列化
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
                 .deserialize(channel.getUrl(), input);
         this.put(SERIALIZATION_ID_KEY, serializationType);
-
+        // dubbo版本
         String dubboVersion = in.readUTF();
+        // 请求中放入dubbo版本
         request.setVersion(dubboVersion);
+        // 附加值内加入dubbo版本，path以及版本号
         setAttachment(DUBBO_VERSION_KEY, dubboVersion);
 
         String path = in.readUTF();
         setAttachment(PATH_KEY, path);
         String version = in.readUTF();
         setAttachment(VERSION_KEY, version);
-
+        // 设置方法名称
         setMethodName(in.readUTF());
 
         String desc = in.readUTF();
@@ -126,7 +152,10 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
             if (ConfigurationUtils.getSystemConfiguration().getBoolean(SERIALIZATION_SECURITY_CHECK_KEY, false)) {
                 CodecSupport.checkSerialization(path, version, serializationType);
             }
+            // 如果为空，则方法参数数组和对方法参数类型数组都设置为空
+            // 方法参数数组
             Object[] args = DubboCodec.EMPTY_OBJECT_ARRAY;
+            // 方法参数类型数组
             Class<?>[] pts = DubboCodec.EMPTY_CLASS_ARRAY;
             if (desc.length() > 0) {
 //                if (RpcUtils.isGenericCall(path, getMethodName()) || RpcUtils.isEcho(path, getMethodName())) {
@@ -134,6 +163,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 //                } else {
                 ServiceRepository repository = ApplicationModel.getServiceRepository();
                 ServiceDescriptor serviceDescriptor = repository.lookupService(path);
+                // 描述
                 if (serviceDescriptor != null) {
                     MethodDescriptor methodDescriptor = serviceDescriptor.getMethod(getMethodName(), desc);
                     if (methodDescriptor != null) {
@@ -164,16 +194,20 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
             Map<String, Object> map = in.readAttachments();
             if (map != null && map.size() > 0) {
+                // 获得所有附加值
                 Map<String, Object> attachment = getObjectAttachments();
                 if (attachment == null) {
                     attachment = new HashMap<>();
                 }
+                // 把流中读到的配置放入附加值
                 attachment.putAll(map);
+                // 放回去
                 setObjectAttachments(attachment);
             }
 
             //decode argument ,may be callback
             for (int i = 0; i < args.length; i++) {
+                // 如果是回调，则再一次解码
                 args[i] = decodeInvocationArgument(channel, this, pts, i, args[i]);
             }
 

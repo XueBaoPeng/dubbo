@@ -38,6 +38,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.ASYNC_METHOD_INFO;
 
 /**
  * EventFilter
+ * 该类是处理异步和同步调用结果的过滤器。
  */
 @Activate(group = CommonConstants.CONSUMER)
 public class FutureFilter implements Filter, Filter.Listener {
@@ -114,6 +115,7 @@ public class FutureFilter implements Filter, Filter.Listener {
         Object[] args = invocation.getArguments();
         Object[] params;
         Class<?>[] rParaTypes = onReturnMethod.getParameterTypes();
+        // 设置参数和返回结果
         if (rParaTypes.length > 1) {
             if (rParaTypes.length == 2 && rParaTypes[1].isAssignableFrom(Object[].class)) {
                 params = new Object[2];
@@ -128,6 +130,7 @@ public class FutureFilter implements Filter, Filter.Listener {
             params = new Object[]{result};
         }
         try {
+            // 调用方法
             onReturnMethod.invoke(onReturnInst, params);
         } catch (InvocationTargetException e) {
             fireThrowCallback(invoker, invocation, e.getTargetException());
@@ -154,10 +157,12 @@ public class FutureFilter implements Filter, Filter.Listener {
         }
         ReflectUtils.makeAccessible(onthrowMethod);
         Class<?>[] rParaTypes = onthrowMethod.getParameterTypes();
+        // 获得抛出异常的类型
         if (rParaTypes[0].isAssignableFrom(exception.getClass())) {
             try {
                 Object[] args = invocation.getArguments();
                 Object[] params;
+                // 把类型和抛出的异常值放入返回结果
 
                 if (rParaTypes.length > 1) {
                     if (rParaTypes.length == 2 && rParaTypes[1].isAssignableFrom(Object[].class)) {
@@ -172,6 +177,7 @@ public class FutureFilter implements Filter, Filter.Listener {
                 } else {
                     params = new Object[]{exception};
                 }
+                // 调用下一个调用连
                 onthrowMethod.invoke(onthrowInst, params);
             } catch (Throwable e) {
                 logger.error(invocation.getMethodName() + ".call back method invoke error . callback method :" + onthrowMethod + ", url:" + invoker.getUrl(), e);

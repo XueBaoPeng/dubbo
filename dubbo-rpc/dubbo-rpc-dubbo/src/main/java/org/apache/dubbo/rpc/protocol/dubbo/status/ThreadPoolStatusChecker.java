@@ -29,17 +29,22 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * ThreadPoolStatusChecker
+ * 该类是对于线程池的状态进行监控。
  */
 @Activate
 public class ThreadPoolStatusChecker implements StatusChecker {
 
     @Override
     public Status check() {
+        // 获得数据中心
         DataStore dataStore = ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension();
+        // 获得线程池集合
         Map<String, Object> executors = dataStore.get(CommonConstants.EXECUTOR_SERVICE_COMPONENT_KEY);
 
         StringBuilder msg = new StringBuilder();
+        // 设置为ok
         Status.Level level = Status.Level.OK;
+        // 遍历线程池集合
         for (Map.Entry<String, Object> entry : executors.entrySet()) {
             String port = entry.getKey();
             ExecutorService executor = (ExecutorService) entry.getValue();
@@ -48,6 +53,7 @@ public class ThreadPoolStatusChecker implements StatusChecker {
                 ThreadPoolExecutor tp = (ThreadPoolExecutor) executor;
                 boolean ok = tp.getActiveCount() < tp.getMaximumPoolSize() - 1;
                 Status.Level lvl = Status.Level.OK;
+                // 如果活跃数量超过了最大的线程数量，则设置warn
                 if (!ok) {
                     level = Status.Level.WARN;
                     lvl = Status.Level.WARN;
@@ -56,6 +62,7 @@ public class ThreadPoolStatusChecker implements StatusChecker {
                 if (msg.length() > 0) {
                     msg.append(";");
                 }
+                // 输出线程池相关信息
                 msg.append("Pool status:").append(lvl).append(", max:").append(tp.getMaximumPoolSize()).append(", core:")
                         .append(tp.getCorePoolSize()).append(", largest:").append(tp.getLargestPoolSize()).append(", active:")
                         .append(tp.getActiveCount()).append(", task:").append(tp.getTaskCount()).append(", service port: ").append(port);

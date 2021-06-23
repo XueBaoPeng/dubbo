@@ -31,6 +31,9 @@ import java.io.IOException;
 import static org.apache.dubbo.rpc.Constants.INPUT_KEY;
 import static org.apache.dubbo.rpc.Constants.OUTPUT_KEY;
 
+/**
+ * 该类是对DubboCodec的功能增强，增加了消息长度的限制。
+ */
 public final class DubboCountCodec implements Codec2 {
 
     private DubboCodec codec = new DubboCodec();
@@ -42,19 +45,24 @@ public final class DubboCountCodec implements Codec2 {
 
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
+        // 保存读取的标志
         int save = buffer.readerIndex();
         MultiMessage result = MultiMessage.create();
         do {
             Object obj = codec.decode(channel, buffer);
+            // 粘包拆包
             if (Codec2.DecodeResult.NEED_MORE_INPUT == obj) {
                 buffer.readerIndex(save);
                 break;
             } else {
+                // 增加消息
                 result.addMessage(obj);
+                // 记录消息长度
                 logMessageLength(obj, buffer.readerIndex() - save);
                 save = buffer.readerIndex();
             }
         } while (true);
+        // 如果结果为空，则返回需要更多的输入
         if (result.isEmpty()) {
             return Codec2.DecodeResult.NEED_MORE_INPUT;
         }
@@ -68,14 +76,17 @@ public final class DubboCountCodec implements Codec2 {
         if (bytes <= 0) {
             return;
         }
+        // 如果是request类型
         if (result instanceof Request) {
             try {
+                // 设置附加值
                 ((RpcInvocation) ((Request) result).getData()).setAttachment(INPUT_KEY, String.valueOf(bytes));
             } catch (Throwable e) {
                 /* ignore */
             }
         } else if (result instanceof Response) {
             try {
+                // 设置附加值 输出的长度
                 ((AppResponse) ((Response) result).getResult()).setAttachment(OUTPUT_KEY, String.valueOf(bytes));
             } catch (Throwable e) {
                 /* ignore */

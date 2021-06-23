@@ -42,20 +42,35 @@ import java.lang.reflect.Type;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_ID_KEY;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_SECURITY_CHECK_KEY;
 
+/**
+ * 该类是做了基于dubbo协议对prc结果的解码
+ */
 public class DecodeableRpcResult extends AppResponse implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcResult.class);
-
+    /**
+     * 通道
+     */
     private Channel channel;
-
+    /**
+     * 序列化类型
+     */
     private byte serializationType;
-
+    /**
+     * 输入流
+     */
     private InputStream inputStream;
-
+    /**
+     * 响应
+     */
     private Response response;
-
+    /**
+     * 会话域
+     */
     private Invocation invocation;
-
+    /**
+     * 是否解码
+     */
     private volatile boolean hasDecoded;
 
     public DecodeableRpcResult(Channel channel, Response response, InputStream is, Invocation invocation, byte id) {
@@ -80,29 +95,37 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
             Thread thread = Thread.currentThread();
             log.debug("Decoding in thread -- [" + thread.getName() + "#" + thread.getId() + "]");
         }
-
+        // 反序列化
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
                 .deserialize(channel.getUrl(), input);
 
         byte flag = in.readByte();
+        // 根据返回的不同结果来进行处理
         switch (flag) {
             case DubboCodec.RESPONSE_NULL_VALUE:
+                // 返回结果为空
                 break;
             case DubboCodec.RESPONSE_VALUE:
                 handleValue(in);
                 break;
             case DubboCodec.RESPONSE_WITH_EXCEPTION:
+                // 返回结果有异常
                 handleException(in);
                 break;
             case DubboCodec.RESPONSE_NULL_VALUE_WITH_ATTACHMENTS:
+                // 返回值为空，但是有附加值
                 handleAttachment(in);
                 break;
             case DubboCodec.RESPONSE_VALUE_WITH_ATTACHMENTS:
+                // 返回值
                 handleValue(in);
+                // 设置附加值
                 handleAttachment(in);
                 break;
             case DubboCodec.RESPONSE_WITH_EXCEPTION_WITH_ATTACHMENTS:
+                // 返回结果有异常并且有附加值
                 handleException(in);
+                // 设置附加值
                 handleAttachment(in);
                 break;
             default:
@@ -114,8 +137,13 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
         return this;
     }
 
+    /**
+     * 该方法是对响应结果的解码，其中根据不同的返回结果来对RpcResult设置不同的值。
+     * @throws Exception
+     */
     @Override
     public void decode() throws Exception {
+        // 如果没有解码
         if (!hasDecoded && channel != null && inputStream != null) {
             try {
                 if (ConfigurationUtils.getSystemConfiguration().getBoolean(SERIALIZATION_SECURITY_CHECK_KEY, false)) {
@@ -126,6 +154,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
                         }
                     }
                 }
+                // 进行解码
                 decode(channel, inputStream);
             } catch (Throwable e) {
                 if (log.isWarnEnabled()) {
@@ -143,11 +172,13 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
         try {
             Type[] returnTypes;
             if (invocation instanceof RpcInvocation) {
+                // 获得返回类型数组
                 returnTypes = ((RpcInvocation) invocation).getReturnTypes();
             } else {
                 returnTypes = RpcUtils.getReturnTypes(invocation);
             }
             Object value = null;
+            // 根据返回类型读取返回结果并且放入RpcResult
             if (ArrayUtils.isEmpty(returnTypes)) {
                 // This almost never happens?
                 value = in.readObject();
@@ -156,6 +187,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
             } else {
                 value = in.readObject((Class<?>) returnTypes[0], returnTypes[1]);
             }
+            // 设置返回结果
             setValue(value);
         } catch (ClassNotFoundException e) {
             rethrow(e);
@@ -164,6 +196,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     private void handleException(ObjectInput in) throws IOException {
         try {
+            // 把异常放入RpcResult
             setException(in.readThrowable());
         } catch (ClassNotFoundException e) {
             rethrow(e);
@@ -172,6 +205,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     private void handleAttachment(ObjectInput in) throws IOException {
         try {
+            // 把附加值加入到RpcResult
             addObjectAttachments(in.readAttachments());
         } catch (ClassNotFoundException e) {
             rethrow(e);
