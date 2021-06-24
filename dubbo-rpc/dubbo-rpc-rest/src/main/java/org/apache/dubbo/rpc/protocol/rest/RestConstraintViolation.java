@@ -21,14 +21,26 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
+/**
+ * 该类是当约束违反的实体类，封装了以下三个属性，具体使用可以看下面的介绍。
+ */
 @XmlRootElement(name = "constraintViolation")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RestConstraintViolation implements Serializable {
 
     private static final long serialVersionUID = -23497234978L;
 
+    /**
+     * 地址
+     */
     private String path;
+    /**
+     * 消息
+     */
     private String message;
+    /**
+     * 值
+     */
     private String value;
 
     public RestConstraintViolation(String path, String message, String value) {

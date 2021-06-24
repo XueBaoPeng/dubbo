@@ -21,23 +21,33 @@ import org.apache.dubbo.remoting.http.HttpBinder;
 /**
  * Only the server that implements servlet container
  * could support something like @Context injection of servlet objects.
- *
+ * 该类是服务器工程类，用来提供相应的实例，里面逻辑比较简单。
  */
 public class RestServerFactory {
-
+    /**
+     * http绑定者
+     */
     private HttpBinder httpBinder;
 
     public void setHttpBinder(HttpBinder httpBinder) {
         this.httpBinder = httpBinder;
     }
 
+    /**
+     * 创建服务器
+     * @param name
+     * @return
+     */
     public RestProtocolServer createServer(String name) {
         // TODO move names to Constants
+        // 如果是servlet或者jetty或者tomcat，则创建DubboHttpServer
         if ("servlet".equalsIgnoreCase(name) || "jetty".equalsIgnoreCase(name) || "tomcat".equalsIgnoreCase(name)) {
             return new DubboHttpProtocolServer(httpBinder);
         } else if ("netty".equalsIgnoreCase(name)) {
+            // 如果是netty，那么直接创建netty服务器
             return new NettyRestProtocolServer();
         } else {
+            // 否则 抛出异常
             throw new IllegalArgumentException("Unrecognized server name: " + name);
         }
     }

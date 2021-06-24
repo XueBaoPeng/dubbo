@@ -20,14 +20,20 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.ProtocolServer;
 
 public interface RestProtocolServer extends ProtocolServer {
-
-    void start(URL url);
-
     /**
+     * 服务器启动
+     * @param url
+     */
+    void start(URL url);
+    /**
+     * 部署服务器
      * @param resourceDef it could be either resource interface or resource impl
      */
     void deploy(Class resourceDef, Object resourceInstance, String contextPath);
-
+    /**
+     * 取消服务器部署
+     * @param resourceDef
+     */
     void undeploy(Class resourceDef);
 
 }

@@ -23,11 +23,16 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 /**
  * We don't support propertyInjector here since the resource impl should be singleton in dubbo
- *
+ * 该类实现了ResourceFactory接口，是资源工程实现类，封装了以下两个属性，实现比较简单。
  */
 public class DubboResourceFactory implements ResourceFactory {
-
+    /**
+     * 资源类
+     */
     private Object resourceInstance;
+    /**
+     * 扫描的类型
+     */
     private Class scannableClass;
 //    private PropertyInjector propertyInjector;
 //    private String context = null;

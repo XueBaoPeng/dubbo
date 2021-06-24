@@ -60,8 +60,13 @@ import static org.apache.dubbo.remoting.Constants.DEFAULT_CONNECT_TIMEOUT;
 import static org.apache.dubbo.remoting.Constants.SERVER_KEY;
 import static org.apache.dubbo.rpc.protocol.rest.Constants.EXTENSION_KEY;
 
+/**
+ * 该类继承了AbstractProxyProtocol，是rest协议实现的核心。
+ */
 public class RestProtocol extends AbstractProxyProtocol {
-
+    /**
+     * 默认端口号
+     */
     private static final int DEFAULT_PORT = 80;
     private static final String DEFAULT_SERVER = "jetty";
 
@@ -70,12 +75,19 @@ public class RestProtocol extends AbstractProxyProtocol {
     private static final int HTTPCLIENT_KEEPALIVEDURATION = 30 * 1000;
     private static final int HTTPCLIENTCONNECTIONMANAGER_CLOSEWAITTIME_MS = 1000;
     private static final int HTTPCLIENTCONNECTIONMANAGER_CLOSEIDLETIME_S = 30;
-
+    /**
+     * 服务器工厂
+     */
     private final RestServerFactory serverFactory = new RestServerFactory();
 
     // TODO in the future maybe we can just use a single rest client and connection manager
+    /**
+     * 客户端集合
+     */
     private final List<ResteasyClient> clients = Collections.synchronizedList(new LinkedList<>());
-
+    /**
+     * 连接监控
+     */
     private volatile ConnectionMonitor connectionMonitor;
 
     public RestProtocol() {
@@ -91,26 +103,44 @@ public class RestProtocol extends AbstractProxyProtocol {
         return DEFAULT_PORT;
     }
 
+    /**
+     * 该方法是服务暴露的方法。
+     * @param impl
+     * @param type
+     * @param url
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     protected <T> Runnable doExport(T impl, Class<T> type, URL url) throws RpcException {
+        // 获得地址
         String addr = getAddr(url);
+        // 获得实现类
         Class implClass = ApplicationModel.getProviderModel(url.getServiceKey()).getServiceInstance().getClass();
+        // 获得服务
         RestProtocolServer server = (RestProtocolServer) serverMap.computeIfAbsent(addr, restServer -> {
+            // 创建服务器
             RestProtocolServer s = serverFactory.createServer(url.getParameter(SERVER_KEY, DEFAULT_SERVER));
             s.setAddress(url.getAddress());
+            // 开启服务器
             s.start(url);
             return s;
         });
-
+        // 获得contextPath
         String contextPath = getContextPath(url);
+        // 如果以servlet的方式
         if ("servlet".equalsIgnoreCase(url.getParameter(SERVER_KEY, DEFAULT_SERVER))) {
+            // 获得ServletContext
             ServletContext servletContext = ServletManager.getInstance().getServletContext(ServletManager.EXTERNAL_SERVER_PORT);
+            // 如果为空，则抛出异常
             if (servletContext == null) {
                 throw new RpcException("No servlet context found. Since you are using server='servlet', " +
                         "make sure that you've configured " + BootstrapListener.class.getName() + " in web.xml");
             }
             String webappPath = servletContext.getContextPath();
             if (StringUtils.isNotEmpty(webappPath)) {
+                // 检测配置是否正确
                 webappPath = webappPath.substring(1);
                 if (!contextPath.startsWith(webappPath)) {
                     throw new RpcException("Since you are using server='servlet', " +
@@ -122,9 +152,9 @@ public class RestProtocol extends AbstractProxyProtocol {
                 }
             }
         }
-
+        // 获得资源
         final Class resourceDef = GetRestful.getRootResourceClass(implClass) != null ? implClass : type;
-
+        // 部署服务器
         server.deploy(resourceDef, impl, contextPath);
 
         final RestProtocolServer s = server;
@@ -259,8 +289,17 @@ public class RestProtocol extends AbstractProxyProtocol {
         }
     }
 
+    /**
+     * 该内部类是处理连接的监控类，当连接过期获取空间的时候，关闭它。
+     */
     protected class ConnectionMonitor extends Thread {
+        /**
+         * 是否关闭
+         */
         private volatile boolean shutdown;
+        /**
+         * 连接池集合
+         */
         private final List<PoolingHttpClientConnectionManager> connectionManagers = Collections.synchronizedList(new LinkedList<>());
 
         public void addConnectionManager(PoolingHttpClientConnectionManager connectionManager) {
@@ -274,12 +313,15 @@ public class RestProtocol extends AbstractProxyProtocol {
                     synchronized (this) {
                         wait(HTTPCLIENTCONNECTIONMANAGER_CLOSEWAITTIME_MS);
                         for (PoolingHttpClientConnectionManager connectionManager : connectionManagers) {
+                            // 关闭池中所有过期的连接
                             connectionManager.closeExpiredConnections();
+                            // 关闭池中的空闲连接
                             connectionManager.closeIdleConnections(HTTPCLIENTCONNECTIONMANAGER_CLOSEIDLETIME_S, TimeUnit.SECONDS);
                         }
                     }
                 }
             } catch (InterruptedException ex) {
+                // 关闭
                 shutdown();
             }
         }

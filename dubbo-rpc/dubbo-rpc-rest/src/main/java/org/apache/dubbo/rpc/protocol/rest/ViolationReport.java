@@ -23,12 +23,18 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * 该类是约束违反的记录类，其中就封装了一个约束违反的集合。
+ */
 @XmlRootElement(name="violationReport")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ViolationReport implements Serializable {
 
     private static final long serialVersionUID = -130498234L;
 
+    /**
+     * 约束违反集合
+     */
     private List<RestConstraintViolation> constraintViolations;
 
     public List<RestConstraintViolation> getConstraintViolations() {
