@@ -24,14 +24,21 @@ import java.util.Map;
 
 /**
  * InjvmExporter
+ * 该类继承了AbstractExporter，是本地服务的暴露者封装，其中实现比较简单。只是实现了unexport方法，并且维护了一份保存暴露者的集合。
  */
 class InjvmExporter<T> extends AbstractExporter<T> {
 
+    /**
+     * 服务key
+     */
     private final String key;
-
+    /**
+     * 暴露者集合
+     */
     private final Map<String, Exporter<?>> exporterMap;
 
     InjvmExporter(Invoker<T> invoker, String key, Map<String, Exporter<?>> exporterMap) {
+        // 调用父类的取消暴露方法
         super(invoker);
         this.key = key;
         this.exporterMap = exporterMap;
@@ -40,6 +47,7 @@ class InjvmExporter<T> extends AbstractExporter<T> {
 
     @Override
     public void afterUnExport() {
+        // 从集合中移除
         exporterMap.remove(key);
     }
 
