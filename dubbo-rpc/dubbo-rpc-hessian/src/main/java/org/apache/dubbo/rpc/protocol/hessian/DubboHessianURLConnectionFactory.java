@@ -26,13 +26,25 @@ import com.caucho.hessian.client.HessianURLConnectionFactory;
 import java.io.IOException;
 import java.net.URL;
 
+/**
+ * 该类继承了HessianURLConnectionFactory类，是dubbo，用于创建与服务器的连接的内部工厂，重写了父类中open方法。
+ * 在hessian上加入dubbo自己所需要的附加值，放到协议头里面进行发送。
+ */
 public class DubboHessianURLConnectionFactory extends HessianURLConnectionFactory {
-
+    /**
+     * 打开与HTTP服务器的新连接或循环连接
+     * @param url
+     * @return
+     * @throws IOException
+     */
     @Override
     public HessianConnection open(URL url) throws IOException {
+        // 获得一个连接
         HessianConnection connection = super.open(url);
+        // 获得上下文
         RpcContext context = RpcContext.getContext();
         for (String key : context.getObjectAttachments().keySet()) {
+            // 在http协议头里面加入dubbo中附加值，key为 header+key  value为附加值的value
             connection.addHeader(Constants.DEFAULT_EXCHANGER + key, context.getAttachment(key));
         }
 
