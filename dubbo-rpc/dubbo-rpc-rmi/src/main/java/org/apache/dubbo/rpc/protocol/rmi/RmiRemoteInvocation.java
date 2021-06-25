@@ -28,6 +28,9 @@ import java.util.Map;
 
 import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 
+/**
+ * 该类继承了RemoteInvocation，主要是在RemoteInvocation的基础上新增dubbo自身所需的附加值，避免这些附加值没有被传递，为了做一些验证处理。
+ */
 public class RmiRemoteInvocation extends RemoteInvocation {
     private static final long serialVersionUID = 1L;
     private static final String DUBBO_ATTACHMENTS_ATTR_NAME = "dubbo.attachments";
@@ -37,19 +40,24 @@ public class RmiRemoteInvocation extends RemoteInvocation {
      */
     public RmiRemoteInvocation(MethodInvocation methodInvocation) {
         super(methodInvocation);
+        // 添加dubbo附加值的属性
         addAttribute(DUBBO_ATTACHMENTS_ATTR_NAME, new HashMap<>(RpcContext.getContext().getObjectAttachments()));
     }
 
     /**
      * Need to restore context on provider side (Though context will be overridden by Invocation's attachment
      * when ContextFilter gets executed, we will restore the attachment when Invocation is constructed, check more
+     * 需要在提供者端恢复上下文（尽管上下文将被Invocation的附件覆盖
+     * 当ContextFilter执行时，我们将在构造Invocation时恢复附件，检查更多
      * from {@link org.apache.dubbo.rpc.proxy.InvokerInvocationHandler}
      */
     @SuppressWarnings("unchecked")
     @Override
     public Object invoke(Object targetObject) throws NoSuchMethodException, IllegalAccessException,
             InvocationTargetException {
+        // 获得上下文
         RpcContext context = RpcContext.getContext();
+        // 设置参数
         context.setObjectAttachments((Map<String, Object>) getAttribute(DUBBO_ATTACHMENTS_ATTR_NAME));
         String generic = (String) getAttribute(GENERIC_KEY);
         if (StringUtils.isNotEmpty(generic)) {
@@ -58,6 +66,7 @@ public class RmiRemoteInvocation extends RemoteInvocation {
         try {
             return super.invoke(targetObject);
         } finally {
+            // 清空参数
             context.setObjectAttachments(null);
         }
     }
