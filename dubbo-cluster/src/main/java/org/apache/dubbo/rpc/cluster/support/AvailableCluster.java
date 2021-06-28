@@ -23,7 +23,7 @@ import org.apache.dubbo.rpc.cluster.Directory;
 
 /**
  * AvailableCluster
- *
+ * Available Cluster我在上面已经讲过了，只要找到一个可用的，则直接调用。
  */
 public class AvailableCluster implements Cluster {
 

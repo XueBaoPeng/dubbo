@@ -30,6 +30,7 @@ public class FailfastCluster extends AbstractCluster {
 
     @Override
     public <T> AbstractClusterInvoker<T> doJoin(Directory<T> directory) throws RpcException {
+        // 创建FailfastClusterInvoker
         return new FailfastClusterInvoker<>(directory);
     }
 

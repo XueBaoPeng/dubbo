@@ -46,7 +46,9 @@ public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(final Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+        // 检测invokers是否为空
         checkInvokers(invokers, invocation);
+        // 把invokers放到上下文
         RpcContext.getContext().setInvokers((List) invokers);
         RpcException exception = null;
         Result result = null;
@@ -64,6 +66,7 @@ public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
         int failThresholdIndex = invokers.size() * broadcastFailPercent / MAX_BROADCAST_FAIL_PERCENT;
         int failIndex = 0;
+        // 遍历invokers，逐个调用，在循环调用结束后，只要任意一台报错就报错
         for (Invoker<T> invoker : invokers) {
             try {
                 result = invoker.invoke(invocation);
