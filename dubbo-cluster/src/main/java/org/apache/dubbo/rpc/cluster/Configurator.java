@@ -33,20 +33,21 @@ import static org.apache.dubbo.rpc.cluster.Constants.PRIORITY_KEY;
 
 /**
  * Configurator. (SPI, Prototype, ThreadSafe)
- *
+ * 该接口是配置规则的接口，定义了两个方法，第一个是配置规则，并且生成url，
+ * 第二个是把配置配置到旧的url中，其实都是在url上应用规则。
  */
 public interface Configurator extends Comparable<Configurator> {
 
     /**
      * Get the configurator url.
-     *
+     * 配置规则，生成url
      * @return configurator url.
      */
     URL getUrl();
 
     /**
      * Configure the provider url.
-     *
+     * 把规则配置到URL中
      * @param url - old provider url.
      * @return new provider url.
      */

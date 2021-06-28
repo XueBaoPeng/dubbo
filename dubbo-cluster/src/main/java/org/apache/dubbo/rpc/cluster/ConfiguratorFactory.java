@@ -22,14 +22,14 @@ import org.apache.dubbo.common.extension.SPI;
 
 /**
  * ConfiguratorFactory. (SPI, Singleton, ThreadSafe)
- *
+ * 该接口是Configurator的工厂接口，定义了一个getConfigurator方法来获得Configurator实例，比较好理解。
  */
 @SPI
 public interface ConfiguratorFactory {
 
     /**
      * get the configurator instance.
-     *
+     * 获得configurator实例
      * @param url - configurator url.
      * @return configurator instance.
      */
