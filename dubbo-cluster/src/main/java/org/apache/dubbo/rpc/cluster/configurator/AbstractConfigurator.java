@@ -44,6 +44,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.OVERRIDE_PROVIDERS_KEY;
 
 /**
  * AbstractOverrideConfigurator
+ * 该类实现了Configurator接口，是配置规则 抽象类，配置有两种方式，一种是没有时添加配置，这种暂时没有用到，另一种是覆盖配置。
  */
 public abstract class AbstractConfigurator implements Configurator {
 
@@ -95,6 +96,7 @@ public abstract class AbstractConfigurator implements Configurator {
     @Deprecated
     private URL configureDeprecated(URL url) {
         // If override url has port, means it is a provider address. We want to control a specific provider with this override url, it may take effect on the specific provider instance or on consumers holding this provider instance.
+        // 如果覆盖url具有端口，则表示它是提供者地址。我们希望使用此覆盖URL控制特定提供程序，它可以在提供端生效 也可以在消费端生效。
         if (configuratorUrl.getPort() != 0) {
             if (url.getPort() == configuratorUrl.getPort()) {
                 return configureIfMatch(url.getHost(), url);
@@ -105,28 +107,40 @@ public abstract class AbstractConfigurator implements Configurator {
              *  1.If it is a consumer ip address, the intention is to control a specific consumer instance, it must takes effect at the consumer side, any provider received this override url should ignore.
              *  2.If the ip is 0.0.0.0, this override url can be used on consumer, and also can be used on provider.
              */
+            // 配置规则，URL 没有端口，意味着override 输入消费端地址 或者 0.0.0.0
             if (url.getParameter(SIDE_KEY, PROVIDER).equals(CONSUMER)) {
                 // NetUtils.getLocalHost is the ip address consumer registered to registry.
+                // 如果它是一个消费者ip地址，目的是控制一个特定的消费者实例，它必须在消费者一方生效，任何提供者收到这个覆盖url应该忽略;
                 return configureIfMatch(NetUtils.getLocalHost(), url);
             } else if (url.getParameter(SIDE_KEY, CONSUMER).equals(PROVIDER)) {
                 // take effect on all providers, so address must be 0.0.0.0, otherwise it won't flow to this if branch
+                // 如果ip为0.0.0.0，则此覆盖url可以在使用者上使用，也可以在提供者上使用
                 return configureIfMatch(ANYHOST_VALUE, url);
             }
         }
         return url;
     }
 
+    /**
+     * 该方法是当条件匹配时，才对url进行配置。
+     * @param host
+     * @param url
+     * @return
+     */
     private URL configureIfMatch(String host, URL url) {
+        // 匹配 Host
         if (ANYHOST_VALUE.equals(configuratorUrl.getHost()) || host.equals(configuratorUrl.getHost())) {
             // TODO, to support wildcards
             String providers = configuratorUrl.getParameter(OVERRIDE_PROVIDERS_KEY);
             if (StringUtils.isEmpty(providers) || providers.contains(url.getAddress()) || providers.contains(ANYHOST_VALUE)) {
                 String configApplication = configuratorUrl.getParameter(APPLICATION_KEY,
                         configuratorUrl.getUsername());
+                // 匹配 "application"
                 String currentApplication = url.getParameter(APPLICATION_KEY, url.getUsername());
                 if (configApplication == null || ANY_VALUE.equals(configApplication)
                         || configApplication.equals(currentApplication)) {
                     Set<String> conditionKeys = new HashSet<String>();
+                    // 配置 URL 中的条件 KEYS 集合。其中下面四个 KEY ，不算是条件，而是内置属性。考虑到下面要移除，所以添加到该集合中。
                     conditionKeys.add(CATEGORY_KEY);
                     conditionKeys.add(Constants.CHECK_KEY);
                     conditionKeys.add(DYNAMIC_KEY);
@@ -144,6 +158,7 @@ public abstract class AbstractConfigurator implements Configurator {
                         boolean startWithTilde = startWithTilde(key);
                         if (startWithTilde || APPLICATION_KEY.equals(key) || SIDE_KEY.equals(key)) {
                             if (startWithTilde) {
+                                // 添加搭配条件集合
                                 conditionKeys.add(key);
                             }
                             if (value != null && !ANY_VALUE.equals(value)

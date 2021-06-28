@@ -22,7 +22,7 @@ import org.apache.dubbo.rpc.cluster.ConfiguratorFactory;
 
 /**
  * AbsentConfiguratorFactory
- *
+ * 该类是不存在时添加配置的工厂类，用来创建AbsentConfigurator。
  */
 public class AbsentConfiguratorFactory implements ConfiguratorFactory {
 

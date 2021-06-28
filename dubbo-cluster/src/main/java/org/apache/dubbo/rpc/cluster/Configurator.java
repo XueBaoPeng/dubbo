@@ -100,6 +100,7 @@ public interface Configurator extends Comparable<Configurator> {
      * Sort by host, then by priority
      * 1. the url with a specific host ip should have higher priority than 0.0.0.0
      * 2. if two url has the same host, compare by priority value；
+     * 这是配置的排序策略。先根据host升序，如果相同，再通过priority降序
      */
     @Override
     default int compareTo(Configurator o) {
@@ -107,8 +108,10 @@ public interface Configurator extends Comparable<Configurator> {
             return -1;
         }
 
+        // // host 升序
         int ipCompare = getUrl().getHost().compareTo(o.getUrl().getHost());
         // host is the same, sort by priority
+        // 如果host相同，则根据priority降序来对比
         if (ipCompare == 0) {
             int i = getUrl().getParameter(PRIORITY_KEY, 0);
             int j = o.getUrl().getParameter(PRIORITY_KEY, 0);
