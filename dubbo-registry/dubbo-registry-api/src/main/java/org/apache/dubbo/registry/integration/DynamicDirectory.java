@@ -62,21 +62,45 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicDirectory.class);
 
+    /**
+     * cluster实现类对象
+     */
     protected static final Cluster CLUSTER = ExtensionLoader.getExtensionLoader(Cluster.class).getAdaptiveExtension();
-
+    /**
+     * 路由工厂
+     */
     protected static final RouterFactory ROUTER_FACTORY = ExtensionLoader.getExtensionLoader(RouterFactory.class)
             .getAdaptiveExtension();
-
+    /**
+     * 服务key
+     */
     protected final String serviceKey; // Initialization at construction time, assertion not null
+    /**
+     * 服务类型
+     */
     protected final Class<T> serviceType; // Initialization at construction time, assertion not null
     protected final URL directoryUrl; // Initialization at construction time, assertion not null, and always assign non null value
+    /**
+     * 是否使用多分组
+     */
     protected final boolean multiGroup;
+    /**
+     * 协议
+     */
     protected Protocol protocol; // Initialization at the time of injection, the assertion is not null
+    /**
+     * 注册中心
+     */
     protected Registry registry; // Initialization at the time of injection, the assertion is not null
+    /**
+     *  是否禁止访问
+     */
     protected volatile boolean forbidden = false;
     protected boolean shouldRegister;
     protected boolean shouldSimplified;
-
+    /**
+     * 覆盖目录的url
+     */
     protected volatile URL overrideDirectoryUrl; // Initialization at construction time, assertion not null, and always assign non null value
 
     protected volatile URL registeredConsumerUrl;
@@ -86,6 +110,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
      * Priority: override>-D>consumer>provider
      * Rule one: for a certain provider <ip:port,timeout=100>
      * Rule two: for all providers <* ,timeout=5000>
+     * 配置规则数组
      */
     protected volatile List<Configurator> configurators; // The initial value is null and the midway may be assigned to null, please use the local variable reference
 
@@ -176,6 +201,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         List<Invoker<T>> invokers = null;
         try {
             // Get invokers from cache, only runtime routers will be executed.
+            // 根据路由规则选择符合规则的invoker集合
             invokers = routerChain.route(getConsumerUrl(), invocation);
         } catch (Throwable t) {
             logger.error("Failed to execute router: " + getUrl() + ", cause: " + t.getMessage(), t);
@@ -223,6 +249,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
 
     @Override
     public void destroy() {
+        // 如果销毁了，则返回
         if (isDestroyed()) {
             return;
         }
@@ -230,6 +257,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         // unregister.
         try {
             if (getRegisteredConsumerUrl() != null && registry != null && registry.isAvailable()) {
+                // 取消订阅
                 registry.unregister(getRegisteredConsumerUrl());
             }
         } catch (Throwable t) {
@@ -245,6 +273,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         }
         super.destroy(); // must be executed after unsubscribing
         try {
+            // 清空所有的invoker
             destroyAllInvokers();
         } catch (Throwable t) {
             logger.warn("Failed to destroy service " + serviceKey, t);
