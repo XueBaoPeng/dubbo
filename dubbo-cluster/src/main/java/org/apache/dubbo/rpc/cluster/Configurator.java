@@ -69,8 +69,10 @@ public interface Configurator extends Comparable<Configurator> {
      *
      * @param urls URL list to convert
      * @return converted configurator list
+     * 该方法是处理配置规则url集合，转换覆盖url映射以便在重新引用时使用，每次发送所有规则，网址将被重新组装和计算。
      */
     static Optional<List<Configurator>> toConfigurators(List<URL> urls) {
+        // 如果为空，则返回空集合
         if (CollectionUtils.isEmpty(urls)) {
             return Optional.empty();
         }
@@ -79,19 +81,26 @@ public interface Configurator extends Comparable<Configurator> {
                 .getAdaptiveExtension();
 
         List<Configurator> configurators = new ArrayList<>(urls.size());
+        // 遍历url集合
         for (URL url : urls) {
+            //如果是协议是empty的值，则清空配置集合
             if (EMPTY_PROTOCOL.equals(url.getProtocol())) {
                 configurators.clear();
                 break;
             }
+            // 覆盖的参数集合
             Map<String, String> override = new HashMap<>(url.getParameters());
             //The anyhost parameter of override may be added automatically, it can't change the judgement of changing url
+            // 覆盖的anyhost参数可以自动添加，也不能改变更改url的判断
             override.remove(ANYHOST_KEY);
+            // 如果需要覆盖添加的值为0，则清空配置
             if (CollectionUtils.isEmptyMap(override)) {
                 continue;
             }
+            // 加入配置规则集合
             configurators.add(configuratorFactory.getConfigurator(url));
         }
+        // 排序
         Collections.sort(configurators);
         return Optional.of(configurators);
     }

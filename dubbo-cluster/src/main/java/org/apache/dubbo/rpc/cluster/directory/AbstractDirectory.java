@@ -46,10 +46,17 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
     // logger
     private static final Logger logger = LoggerFactory.getLogger(AbstractDirectory.class);
 
+    /**
+     * url对象
+     */
     private final URL url;
-
+    /**
+     * 是否销毁
+     */
     private volatile boolean destroyed = false;
-
+    /**
+     * 消费者端url
+     */
     protected volatile URL consumerUrl;
 
     protected final Map<String, String> queryMap; // Initialization at construction time, assertion not null
@@ -90,12 +97,19 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
         return this.consumerUrl;
     }
 
+    /**
+     * 该方法是生成invoker集合的逻辑实现。其中doList是抽象方法，交由子类来实现。
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public List<Invoker<T>> list(Invocation invocation) throws RpcException {
+        // 如果销毁，则抛出异常
         if (destroyed) {
             throw new RpcException("Directory already destroyed .url: " + getUrl());
         }
-
+        // 调用doList来获得Invoker集合
         return doList(invocation);
     }
 

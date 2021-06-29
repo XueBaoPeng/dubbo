@@ -49,9 +49,11 @@ public class RouterChain<T> {
     }
 
     private RouterChain(URL url) {
+        // 加载路由工厂
         List<RouterFactory> extensionFactories = ExtensionLoader.getExtensionLoader(RouterFactory.class)
                 .getActivateExtension(url, ROUTER_KEY);
 
+        // 加入集合
         List<Router> routers = extensionFactories.stream()
                 .map(factory -> factory.getRouter(url))
                 .collect(Collectors.toList());
@@ -66,6 +68,7 @@ public class RouterChain<T> {
     public void initWithRouters(List<Router> builtinRouters) {
         this.builtinRouters = builtinRouters;
         this.routers = new ArrayList<>(builtinRouters);
+        // 排序
         this.sort();
     }
 
