@@ -20,12 +20,16 @@ import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.cluster.support.wrapper.AbstractCluster;
 
+/**
+ * 该类实现了Cluster接口，是分组集合的集群实现。
+ */
 public class MergeableCluster extends AbstractCluster {
 
     public static final String NAME = "mergeable";
 
     @Override
     public <T> AbstractClusterInvoker<T> doJoin(Directory<T> directory) throws RpcException {
+        // 创建MergeableClusterInvoker
         return new MergeableClusterInvoker<T>(directory);
     }
 
