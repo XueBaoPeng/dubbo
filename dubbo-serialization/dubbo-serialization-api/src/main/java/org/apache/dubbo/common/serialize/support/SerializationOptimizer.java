@@ -20,12 +20,13 @@ import java.util.Collection;
 
 /**
  * Interface defining serialization optimizer, there are nothing implementations for now.
+ * 该接口序列化优化器接口，在 Kryo 、FST 中，支持配置需要优化的类。业务系统中，可以实现自定义的 SerializationOptimizer，进行配置。或者使用文件来配置也是一个选择。
  */
 public interface SerializationOptimizer {
 
     /**
      * Get serializable classes
-     *
+     * 需要序列化的类的集合
      * @return serializable classes
      * */
     Collection<Class<?>> getSerializableClasses();

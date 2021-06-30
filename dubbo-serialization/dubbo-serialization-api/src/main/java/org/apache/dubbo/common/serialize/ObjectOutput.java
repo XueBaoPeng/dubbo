@@ -21,12 +21,13 @@ import java.util.Map;
 
 /**
  * Object output interface.
+ * 在 DataOutput 的基础上，增加写入object类型的数据。
  */
 public interface ObjectOutput extends DataOutput {
 
     /**
      * write object.
-     *
+     * 输入object类型
      * @param obj object.
      */
     void writeObject(Object obj) throws IOException;

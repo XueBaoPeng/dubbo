@@ -20,12 +20,13 @@ import java.io.IOException;
 
 /**
  * Basic data type output interface.
+ * 该接口是数据输出接口，可以看到定义了向 InputStream 中，写入基本类型的数据。
  */
 public interface DataOutput {
 
     /**
      * Write boolean.
-     *
+     * 输出boolean类型
      * @param v value.
      * @throws IOException
      */
@@ -33,7 +34,7 @@ public interface DataOutput {
 
     /**
      * Write byte.
-     *
+     * 输出byte类型
      * @param v value.
      * @throws IOException
      */
@@ -41,7 +42,7 @@ public interface DataOutput {
 
     /**
      * Write short.
-     *
+     * 输出short类型
      * @param v value.
      * @throws IOException
      */
@@ -49,7 +50,7 @@ public interface DataOutput {
 
     /**
      * Write integer.
-     *
+     * 输出integer类型
      * @param v value.
      * @throws IOException
      */
@@ -57,7 +58,7 @@ public interface DataOutput {
 
     /**
      * Write long.
-     *
+     * 输出long类型
      * @param v value.
      * @throws IOException
      */
@@ -65,7 +66,7 @@ public interface DataOutput {
 
     /**
      * Write float.
-     *
+     * 输出float类型
      * @param v value.
      * @throws IOException
      */
@@ -73,7 +74,7 @@ public interface DataOutput {
 
     /**
      * Write double.
-     *
+     * 输出double类型
      * @param v value.
      * @throws IOException
      */
@@ -89,7 +90,7 @@ public interface DataOutput {
 
     /**
      * Write byte array.
-     *
+     * 输出byte数组
      * @param v value.
      * @throws IOException
      */
@@ -97,7 +98,7 @@ public interface DataOutput {
 
     /**
      * Write byte array.
-     *
+     * 输出byte数组中部分数据
      * @param v value.
      * @param off the start offset in the data.
      * @param len the number of bytes that are written.
@@ -107,7 +108,7 @@ public interface DataOutput {
 
     /**
      * Flush buffer.
-     *
+     * 刷新缓冲区
      * @throws IOException
      */
     void flushBuffer() throws IOException;

@@ -18,11 +18,13 @@ package org.apache.dubbo.common.serialize;
 
 /**
  * Interface defines that the object is cleanable.
+ * 该接口是清理接口，定义了一个清理方法。目前只有kryo实现的时候，完成序列化或反序列化，需要做清理。通过实现该接口，执行清理的逻辑。
  */
 public interface Cleanable {
 
     /**
      * Implementations must implement this cleanup method
+     * 清理
      */
     void cleanup();
 }

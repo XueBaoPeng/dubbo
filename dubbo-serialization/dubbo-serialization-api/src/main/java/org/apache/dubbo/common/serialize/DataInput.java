@@ -20,12 +20,13 @@ import java.io.IOException;
 
 /**
  * Basic data type input interface.
+ * 该接口是数据输入接口，可以看到定义了从 InputStream 中各类数据类型的读取方法。
  */
 public interface DataInput {
 
     /**
      * Read boolean.
-     *
+     * 读取布尔类型
      * @return boolean.
      * @throws IOException
      */
@@ -33,7 +34,7 @@ public interface DataInput {
 
     /**
      * Read byte.
-     *
+     * 读取字节
      * @return byte value.
      * @throws IOException
      */
@@ -41,7 +42,7 @@ public interface DataInput {
 
     /**
      * Read short integer.
-     *
+     * 读取short类型
      * @return short.
      * @throws IOException
      */
@@ -49,7 +50,7 @@ public interface DataInput {
 
     /**
      * Read integer.
-     *
+     * 读取integer类型
      * @return integer.
      * @throws IOException
      */
@@ -57,7 +58,7 @@ public interface DataInput {
 
     /**
      * Read long.
-     *
+     * 读取long类型
      * @return long.
      * @throws IOException
      */
@@ -65,7 +66,7 @@ public interface DataInput {
 
     /**
      * Read float.
-     *
+     * 读取float类型
      * @return float.
      * @throws IOException
      */
@@ -73,7 +74,7 @@ public interface DataInput {
 
     /**
      * Read double.
-     *
+     * 读取double类型
      * @return double.
      * @throws IOException
      */
@@ -81,7 +82,7 @@ public interface DataInput {
 
     /**
      * Read UTF-8 string.
-     *
+     * 读取UTF-8 string
      * @return string.
      * @throws IOException
      */
@@ -89,7 +90,7 @@ public interface DataInput {
 
     /**
      * Read byte array.
-     *
+     * 读取byte数组
      * @return byte array.
      * @throws IOException
      */
