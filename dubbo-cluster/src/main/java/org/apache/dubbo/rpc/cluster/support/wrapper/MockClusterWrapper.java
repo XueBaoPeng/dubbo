@@ -23,7 +23,7 @@ import org.apache.dubbo.rpc.cluster.Directory;
 
 /**
  * mock impl
- *
+ * 该类是服务降级的装饰器类，对Cluster进行了功能增强，增强了服务降级的功能。
  */
 public class MockClusterWrapper implements Cluster {
 
