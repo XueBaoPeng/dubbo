@@ -23,6 +23,7 @@ import org.apache.dubbo.rpc.cluster.RouterFactory;
 /**
  * ConditionRouterFactory
  * Load when "override://" is configured {@link ConditionRouter}
+ * 该类是基于条件表达式规则路由工厂类。
  */
 public class ConditionRouterFactory implements RouterFactory {
 
@@ -30,6 +31,7 @@ public class ConditionRouterFactory implements RouterFactory {
 
     @Override
     public Router getRouter(URL url) {
+        // 创建一个ConditionRouter
         return new ConditionRouter(url);
     }
 

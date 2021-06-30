@@ -32,10 +32,15 @@ import static org.apache.dubbo.rpc.cluster.Constants.RULE_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.RUNTIME_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.TYPE_KEY;
 
+/**
+ * 该类是装饰者，对RouterFactory进行了功能增强，增加了从文件中读取规则。
+ */
 public class FileRouterFactory implements RouterFactory {
 
     public static final String NAME = "file";
-
+    /**
+     * 路由工厂
+     */
     private RouterFactory routerFactory;
 
     public void setRouterFactory(RouterFactory routerFactory) {
@@ -47,19 +52,24 @@ public class FileRouterFactory implements RouterFactory {
         try {
             // Transform File URL into Script Route URL, and Load
             // file:///d:/path/to/route.js?router=script ==> script:///d:/path/to/route.js?type=js&rule=<file-content>
+            // 获得 router 配置项，默认为 script
             String protocol = url.getParameter(ROUTER_KEY, ScriptRouterFactory.NAME); // Replace original protocol (maybe 'file') with 'script'
             String type = null; // Use file suffix to config script type, e.g., js, groovy ...
+            // 获得path
             String path = url.getPath();
+            // 获得类型
             if (path != null) {
                 int i = path.lastIndexOf('.');
                 if (i > 0) {
                     type = path.substring(i + 1);
                 }
             }
+            // 读取规则
             String rule = IOUtils.read(new FileReader(new File(url.getAbsolutePath())));
 
             // FIXME: this code looks useless
             boolean runtime = url.getParameter(RUNTIME_KEY, false);
+            // 获得脚本路由url
             URL script = URLBuilder.from(url)
                     .setProtocol(protocol)
                     .addParameter(TYPE_KEY, type)
@@ -67,6 +77,7 @@ public class FileRouterFactory implements RouterFactory {
                     .addParameterAndEncoded(RULE_KEY, rule)
                     .build();
 
+            // 获得路由
             return routerFactory.getRouter(script);
         } catch (IOException e) {
             throw new IllegalStateException(e.getMessage(), e);

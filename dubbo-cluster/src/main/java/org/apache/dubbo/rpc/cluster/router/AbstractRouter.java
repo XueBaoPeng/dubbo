@@ -22,8 +22,17 @@ import org.apache.dubbo.rpc.cluster.Router;
 import org.apache.dubbo.rpc.cluster.governance.GovernanceRuleRepository;
 
 public abstract class AbstractRouter implements Router {
+    /**
+     * 路由规则的优先级，用于排序，优先级越大越靠前执行，可不填，缺省为 0
+     */
     protected int priority = DEFAULT_PRIORITY;
+    /**
+     * 当路由结果为空时，是否强制执行，如果不强制执行，路由结果为空的路由规则将自动失效，可不填，缺省为 false 。
+     */
     protected boolean force = false;
+    /**
+     * 路由规则 URL
+     */
     protected URL url;
 
     protected GovernanceRuleRepository ruleRepository;

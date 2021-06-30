@@ -55,17 +55,24 @@ import static org.apache.dubbo.rpc.cluster.Constants.TYPE_KEY;
 
 /**
  * ScriptRouter
+ * 该类是基于脚本的路由实现类
  */
 public class ScriptRouter extends AbstractRouter {
 
     public static final String NAME = "SCRIPT_ROUTER";
     private static final int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;
     private static final Logger logger = LoggerFactory.getLogger(ScriptRouter.class);
-
+    /**
+     * 脚本类型 与 ScriptEngine 的映射缓存
+     */
     private static final Map<String, ScriptEngine> ENGINES = new ConcurrentHashMap<>();
-
+    /**
+     * 脚本
+     */
     private final ScriptEngine engine;
-
+    /**
+     * 路由规则
+     */
     private final String rule;
 
     private CompiledScript function;
@@ -86,11 +93,12 @@ public class ScriptRouter extends AbstractRouter {
     public ScriptRouter(URL url) {
         this.url = url;
         this.priority = url.getParameter(PRIORITY_KEY, SCRIPT_ROUTER_DEFAULT_PRIORITY);
-
+        // 创建脚本
         engine = getEngine(url);
         rule = getRule(url);
         try {
             Compilable compilable = (Compilable) engine;
+            // 编译脚本
             function = compilable.compile(rule);
         } catch (ScriptException e) {
             logger.error("route error, rule has been ignored. rule: " + rule +
@@ -124,18 +132,30 @@ public class ScriptRouter extends AbstractRouter {
         });
     }
 
+    /**
+     * 该方法是根据路由规则选择invoker的实现逻辑。
+     * @param invokers   invoker list
+     * @param url        refer url
+     * @param invocation invocation
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> List<Invoker<T>> route(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException {
         if (engine == null || function == null) {
             return invokers;
         }
+        // 创建脚本
         Bindings bindings = createBindings(invokers, invocation);
         return getRoutedInvokers(AccessController.doPrivileged(new PrivilegedAction() {
             @Override
             public Object run() {
                 try {
+                    // 执行脚本
                     return function.eval(bindings);
                 } catch (ScriptException e) {
+                    // 发生异常，忽略路由规则，返回全 `invokers` 集合
                     logger.error("route error, rule has been ignored. rule: " + rule + ", method:" +
                             invocation.getMethodName() + ", url: " + RpcContext.getContext().getUrl(), e);
                     return invokers;
@@ -150,6 +170,7 @@ public class ScriptRouter extends AbstractRouter {
      */
     @SuppressWarnings("unchecked")
     protected <T> List<Invoker<T>> getRoutedInvokers(Object obj) {
+        // 根据结果类型，转换成 (List<Invoker<T>> 类型返回
         if (obj instanceof Invoker[]) {
             return Arrays.asList((Invoker<T>[]) obj);
         } else if (obj instanceof Object[]) {
@@ -165,6 +186,7 @@ public class ScriptRouter extends AbstractRouter {
     private <T> Bindings createBindings(List<Invoker<T>> invokers, Invocation invocation) {
         Bindings bindings = engine.createBindings();
         // create a new List of invokers
+        // 设置invokers、invocation、context
         bindings.put("invokers", new ArrayList<>(invokers));
         bindings.put("invocation", invocation);
         bindings.put("context", RpcContext.getContext());
