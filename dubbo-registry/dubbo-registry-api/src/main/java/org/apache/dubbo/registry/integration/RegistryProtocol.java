@@ -194,29 +194,49 @@ public class RegistryProtocol implements Protocol {
 
     @Override
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
+        // 获得注册中心的url
         URL registryUrl = getRegistryUrl(originInvoker);
         // url to export locally
+        //获得已经注册的服务提供者url
         URL providerUrl = getProviderUrl(originInvoker);
 
         // Subscribe the override data
         // FIXME When the provider subscribes, it will affect the scene : a certain JVM exposes the service and call
         //  the same service. Because the subscribed is cached key with the name of the service, it causes the
         //  subscription information to cover.
+        // 获取override订阅 URL
         final URL overrideSubscribeUrl = getSubscribedOverrideUrl(providerUrl);
+        // 创建override的监听器
         final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
+        // 把监听器添加到集合
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
 
+        // 根据override的配置来覆盖原来的url，使得配置是最新的。
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
         // export invoker
+        // 服务暴露
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
         // url to registry
+        // 根据 URL 加载 Registry 实现类，比如ZookeeperRegistry
         final Registry registry = getRegistry(originInvoker);
+        // 返回注册到注册表的url并过滤url参数一次
         final URL registeredProviderUrl = getUrlToRegistry(providerUrl, registryUrl);
+        // ————————————————————————————————分割线——————————————————————————————————————
+
+        //从代码上看，我用分割线分成两部分，分别是服务暴露和服务注册。该方法的逻辑大致分为以下几个步骤：
+        //
+        //获得服务提供者的url，再通过override数据重新配置url，然后执行doLocalExport()进行服务暴露。
+        //加载注册中心实现类，向注册中心注册服务。
+        //向注册中心进行订阅 override 数据。
+        //创建并返回 DestroyableExporter
 
         // decide if we need to delay publish
+        // 获取 register 参数
         boolean register = providerUrl.getParameter(REGISTER_KEY, true);
+        // 如果需要注册服务
         if (register) {
+            // 向注册中心注册服务
             registry.register(registeredProviderUrl);
         }
 
@@ -228,10 +248,12 @@ public class RegistryProtocol implements Protocol {
         exporter.setSubscribeUrl(overrideSubscribeUrl);
 
         // Deprecated! Subscribe to override rules in 2.6.x or before.
+        // 向注册中心进行订阅 override 数据
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 
         notifyExport(exporter);
         //Ensure that a new exporter instance is returned every time export
+        // 创建并返回 DestroyableExporter
         return new DestroyableExporter<>(exporter);
     }
 
@@ -252,12 +274,22 @@ public class RegistryProtocol implements Protocol {
         return serviceConfigurationListener.overrideUrl(providerUrl);
     }
 
+    /**
+     * 这里的逻辑比较简单，主要是在这里根据不同的协议配置，调用不同的protocol实现。跟暴露到本地的时候实现InjvmProtocol一样。我这里假设配置选用的是dubbo协议，来继续下面的介绍。
+     * @param originInvoker
+     * @param providerUrl
+     * @param <T>
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker, URL providerUrl) {
         String key = getCacheKey(originInvoker);
 
+        // 加入缓存
         return (ExporterChangeableWrapper<T>) bounds.computeIfAbsent(key, s -> {
+            // 创建 Invoker 为委托类对象
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
+            // 调用 protocol 的 export 方法暴露服务
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
         });
     }

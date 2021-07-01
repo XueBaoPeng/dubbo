@@ -113,16 +113,27 @@ public abstract class Wrapper {
         // 判断c是否继承 ClassGenerator.DC.class ，如果是，则拿到父类，避免重复包装
         while (ClassGenerator.isDynamicClass(c)) // can not wrapper on dynamic class.
         {
+            // 返回该对象的超类
             c = c.getSuperclass();
         }
-        // 如果类为object类型
+        //     // 如果超类就是Object，则返回子类Wrapper
         if (c == Object.class) {
             return OBJECT_WRAPPER;
         }
-
+        // 从缓存中获取 Wrapper 实例
         return WRAPPER_MAP.computeIfAbsent(c, Wrapper::makeWrapper);
     }
 
+    /**
+     * 初始化了c1、c2、c3、pts、ms、mns、dmns变量，向 c1、c2、c3 中添加方法定义和类型转换代码。
+     * 为 public 级别的字段生成条件判断取值与赋值代码
+     * 为定义在当前类中的方法生成判断语句，和方法调用语句。
+     * 处理 getter、setter 以及以 is/has/can 开头的方法。处理方式是通过正则表达式获取方法类型（get/set/is/...），以及属性名。之后为属性名生成判断语句，然后为方法生成调用语句。
+     * 通过 ClassGenerator 为刚刚生成的代码构建 Class 类，并通过反射创建对象。ClassGenerator 是 Dubbo 自己封装的，该类的核心是 toClass() 的重载方法 toClass(ClassLoader, ProtectionDomain)，
+     * 该方法通过 javassist 构建 Class。
+     * @param c
+     * @return
+     */
     private static Wrapper makeWrapper(Class<?> c) {
         // 如果缓存里面没有该对象，则新建一个wrapper
         if (c.isPrimitive()) {
