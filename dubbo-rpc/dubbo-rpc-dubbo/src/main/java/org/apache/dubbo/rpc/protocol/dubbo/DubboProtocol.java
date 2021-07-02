@@ -696,7 +696,10 @@ public class DubboProtocol extends AbstractProtocol {
 
     /**
      * Create new connection
-     *
+     *DubboProtocol中的源码分析，initClient 方法首先获取用户配置的客户端类型，最新版本已经改为默认 netty4。然后设置用户心跳配置，
+     * 然后检测用户配置的客户端类型是否存在，不存在则抛出异常。
+     * 最后根据 lazy 配置决定创建什么类型的客户端。这里的 LazyConnectExchangeClient 代码并不是很复杂，该类会在 request 方法被调用时通过
+     * Exchangers 的 connect 方法创建 ExchangeClient 客户端。下面我们分析一下 Exchangers 的 connect 方法。
      * @param url
      */
     private ExchangeClient initClient(URL url) {

@@ -41,6 +41,13 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
             EchoService.class, Destroyable.class
     };
 
+    /**
+        获得Proxy的类加载器来进行生成代理类
+     * @param invoker
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> T getProxy(Invoker<T> invoker) throws RpcException {
         return getProxy(invoker, false);

@@ -41,6 +41,8 @@ import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncl
 
 /**
  * ReferenceFactoryBean
+ * dubbo中有一个类ReferenceBean，它实现了FactoryBean接口，继承了ReferenceConfig，所以ReferenceBean作为dubbo中能生产对象的工厂Bean，而我们要引用服务，
+ * 也就是要有一个该服务的对象
  */
 public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         ApplicationContextAware, InitializingBean, DisposableBean {
@@ -99,6 +101,10 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         beansOfTypeIncludingAncestors(applicationContext, SslConfig.class, includeNonSingletons, allowEagerInit);
     }
 
+    /**
+     * Spring 容器调用 ReferenceBean 的 afterPropertiesSet 方法时引用服务（饿汉式）
+     * @throws Exception
+     */
     @Override
     @SuppressWarnings({"unchecked"})
     public void afterPropertiesSet() throws Exception {

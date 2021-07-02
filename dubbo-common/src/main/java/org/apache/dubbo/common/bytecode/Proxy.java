@@ -81,7 +81,17 @@ public abstract class Proxy {
 
     /**
      * Get proxy.
-     *
+     * 对接口进行校验，检查是否是一个接口，是否不能被类加载器加载。
+     * 做并发控制，保证只有一个线程可以进行后续的代理生成操作。
+     * 创建cpp，用作为服务接口生成代理类。首先对接口定义以及包信息进行处理。
+     * 对接口的方法进行处理，包括返回类型，参数类型等。最后添加方法名、访问控制符、参数列表、方法代码等信息到 ClassGenerator 中。
+     * 创建接口代理类的信息，比如名称，默认构造方法等。
+     * 生成接口代理类。
+     * 创建ccm，ccm 则是用于为 org.apache.dubbo.common.bytecode.Proxy 抽象类生成子类，主要是实现 Proxy 类的抽象方法。
+     * 设置名称、创建构造方法、添加方法
+     * 生成 Proxy 实现类。
+     * 释放资源
+     * 创建弱引用，写入缓存，唤醒其他线程。
      * @param cl  class loader.
      * @param ics interface class array.
      * @return Proxy instance.
